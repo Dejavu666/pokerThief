@@ -18,6 +18,12 @@ class Player():
 
     def draw_card(self,card):
         self.hand.append(card)
+        
+    def contribute_chips(self, amount):
+        assert(amount <= self.stack_size)
+        self.chips_in_pot += amount
+        self.chips_this_round += amount
+        self.stack_size -= amount
 
 
 
