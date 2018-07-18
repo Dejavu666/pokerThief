@@ -24,10 +24,11 @@ class Table():
         self.plyr_dict['player1'].human = 1
         
         # seat_order[0] is dealer, seat_order[1] is SB
+        # seat_order changes to reflect the dealer button being passed
         self.seat_order = [player for player in self.plyr_dict.keys()]
         shuffle(self.seat_order)
         
-        self.round = 'preflop' # 'flop' | 'turn' | 'river'
+        self.round = 1
         self.min_bet = big_blind
         # Players in order of action, first to act is first element
         # is set during post_blinds(), first elem popped to back after each hand
@@ -132,7 +133,7 @@ class Table():
         self.pot = 0
         self.com_cards = []
         self.min_bet = self.big_blind
-        self.round = 'preflop'
+        self.round = 1
         self.left_to_act = []
         self.in_hand = []
         self.cost_to_play = 0
@@ -215,11 +216,17 @@ class Table():
             if len(self.in_hand) == 1:
                 # reward remaining player
                 sentinel = 0
-            if self.left_to_act == [] and self.round == 'river':
+            elif self.left_to_act == [] and self.round == 4:
                 # showdown()
                 sentinel = 0
-            # otherwise, advance round, should change to enum type construct
-            
+            # otherwise, advance round
+            elif self.left_to_act == []:
+                self.round += 1
+                # reset players chips this round, BUT NOT chips_in_pot
+                for plyr in self.seat_order:
+                    self.plyr_dict[plyr].chips_this_round = 0
+                self.left_to_act = self.seat_order[1:] + self.seat_order[:1]
+                
 
 
 ####### TEST #######
