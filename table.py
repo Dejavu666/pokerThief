@@ -90,42 +90,55 @@ class Table():
         self.in_hand = self.left_to_act[:]
         self.cost_to_play = self.big_blind
         
-    # Play-Hand Looping Function
-    # Gets player action and steps through table states
-    # Until only 1 player left in_hand or resolved with showdown function
-    def play_hand_loop(self):
-        sentinel = 1
-        while(sentinel):
-            plyr_str = self.left_to_act[0]
-            # Prompt first player in left_to_act
-            # bet/check/fold if table.cost_to_play == playerN.chips_this_round
-            # call/raze/fold if table.cost_to_play > playerN.chips_this_round
-            if self.plyr_dict[plyr_str].human == 1:
-                # HOOK UP GUI HERE get user input
-                # action = ...
-                pass
-            else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
-                action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
-            # apply action
-            if action[0] == 'bet':
-                bet(plyr_str, action[1])
-            elif action[0] == 'raise':
-                raze(plyr_str, action[1])
-            elif action[0] == 'call':
-                call(plyr_str, action[1])
-            elif action[0] == 'fold':
-                fold(plyr_str)
-            elif action[0] == 'check':
-                check(plyr_str)
-                
-            # Check for end of round/hand
-            if len(self.in_hand) == 1:
-                # reward remaining player
-                sentinel = 0
-            if self.left_to_act == [] and self.round == 'river':
-                # showdown()
-                sentinel = 0
-    
+    # At end of hand, if a player is all-in, run this
+    # For each player in_hand and 'all-in', in order of ascending start_stack
+    # Create a sidepot by contributing from each other player: max(player.start_stack, other_player.chips_in_pot)
+    # The player or players whose equivalent start_stack values were used to create this sidepot...
+    # are eligible for this pot and no further created pots
+    # When all chips from table.pot are consumed, the current pot that finished consuming them is the 'main' pot
+    # All remaining players are eligible for this and all previous pots
+    # RETURN VALUE --> ([sidepot1,sidepot2,...,mainpot],[[players_elig_sidepot1],[players_elig_sidepot2],...,
+    # [players_elig_mainpot]]
+    # Call if at least one sidepot ncsry, at least one player is all-in/in_hand
+    def create_sidepots(self):
+        players_in_hand = self.in_hand[:]
+        pot_chips = self.pot
+        pots_w_elig_plyrs = []
+        all_in = []
+        for plyr in self.seat_order:
+            if plyr in self.in_hand and self.plyr_dict[plyr].stack_size == 0:# if player is all-in
+                all_in.append((self.plyr_dict[plyr].start_stack, plyr))
+        all_in.sort()
+        # all_in looks like: [(lowest_plyr.start_stack, lowest_plyr_str),...
+        # just consume players that are all-in, only they need sidepots
+        all_in_cpy = all_in[:]
+        for stack_plyr_tup in all_in:
+            sidepot = 0
+            for plyr in self.seat_order:
+                amount = min(self.plyr_dict[plyr].chips_in_pot, pot_chips)
+                sidepot += amount
+                pot_chips -= amount
+                if pot_chips == 0:# pot is consumed, current sidepot is mainpot
+                    pots_w_elig_players.append((sidepot, [players_in_hand]))
+                    return pots_w_elig_players
+            # remove players with equiv, least chips_in_pot from players_in_hand
+            low_stack = all_in_copy[0][0]
+            for player in self.in_hand:
+                if self.plyr_dict[player].chips_in_pot == low_stack:
+                    players_in_hand.remove(player)
+                    all_in_copy = all_in_copy[1:] # modify object while looping on it
+
+    def clean_table(self):
+        self.pot = 0
+        self.com_cards = []
+        self.min_bet = self.big_blind
+        self.round = 'preflop'
+        self.left_to_act = []
+        self.in_hand = []
+        self.cost_to_play = 0
+        for plyr in self.seat_order:
+            self.plyr_dict[plyr].clean_player()
+
     # Starting from the plyr_str's index+1 in seat_order, if player is in_hand but not in left2act,
     # append player to left2act
     def repop_left_to_act(self, plyr_str):
@@ -167,16 +180,67 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
+    # Play-Hand Looping Function
+    # Gets player action and steps through table states
+    # Until only 1 player left in_hand or resolved with showdown function
+    def play_hand_loop(self):
+        sentinel = 1
+        while(sentinel):
+            plyr_str = self.left_to_act[0]
+            # Prompt first player in left_to_act
+            # bet/check/fold if table.cost_to_play == playerN.chips_this_round
+            # call/raze/fold if table.cost_to_play > playerN.chips_this_round
+            if self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
+                act = input("test input without validation, input C for call c for check, b, r, f")
+                amount = input("enter amount, if ncsry")
+                action = (act, amount)
+            else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
+                action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
+            # apply action
+            if action[0] == 'b':
+                bet(plyr_str, action[1])
+            elif action[0] == 'r':
+                raze(plyr_str, action[1])
+            elif action[0] == 'C':
+                call(plyr_str, action[1])
+            elif action[0] == 'f':
+                fold(plyr_str)
+            elif action[0] == 'c':
+                self.check(plyr_str)
+                
+            # DEBUG
+            print('left2act == ',self.left_to_act)
+            # DEBUG
+            # Check for end of round/hand
+            if len(self.in_hand) == 1:
+                # reward remaining player
+                sentinel = 0
+            if self.left_to_act == [] and self.round == 'river':
+                # showdown()
+                sentinel = 0
+            # otherwise, advance round, should change to enum type construct
+            
+
 
 ####### TEST #######
 # dependencies = num_players, num_chips, big_blind
-test_params = [[2,10,20],[3,100,20],[3,10,20]]
-for param in test_params:
-    table = Table(param[0],param[1],param[2])
+# test_params = [[2,10,20],[3,100,20],[3,10,20]]
+# for param in test_params:
+#     table = Table(param[0],param[1],param[2])
+# 
+#     print(table.plyr_dict)
+#     print(table.seat_order)
+#     table.post_blinds()
+#     for k in table.plyr_dict.keys():
+#         print(table.plyr_dict[k].stack_size)
+#     print(table.pot)
 
-    print(table.plyr_dict)
-    print(table.seat_order)
-    table.post_blinds()
-    for k in table.plyr_dict.keys():
-        print(table.plyr_dict[k].stack_size)
-    print(table.pot)
+# TESTS for table.create_sidepots
+# create mock data with AT LEAST one player all-in/in-hand
+
+table = Table(4,200,20)
+# set all players to human
+for player in table.seat_order:
+    table.plyr_dict[player].human = 1
+table.post_blinds()
+table.play_hand_loop()

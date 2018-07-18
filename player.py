@@ -14,9 +14,6 @@ class Player():
         # signify if instance is human or computer
         self.human = 0
 
-    def discard_hand(self):
-        self.hand = []
-
     def draw_card(self,card):
         self.hand.append(card)
         
@@ -25,6 +22,12 @@ class Player():
         self.chips_in_pot += amount
         self.chips_this_round += amount
         self.stack_size -= amount
+    
+    def clean_player():
+        self.hand = []
+        self.chips_this_round = 0
+        self.chips_in_pot = 0
+        self.start_stack = self.stack_size
     
     # bot needs all irreducible info, but start with:
     # stacksize, cost2play, com_cards,
