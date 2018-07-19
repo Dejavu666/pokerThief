@@ -185,6 +185,11 @@ class Table():
     # Gets player action and steps through table states
     # Until only 1 player left in_hand or resolved with showdown function
     def play_hand_loop(self):
+        # deal hole cards to players
+        for p in self.seat_order:
+            self.plyr_dict[p].draw_card(self.deck.draw_card())
+        for p in self.seat_order:
+            self.plyr_dict[p].draw_card(self.deck.draw_card())
         sentinel = 1
         while(sentinel):
             plyr_str = self.left_to_act[0]
@@ -229,11 +234,21 @@ class Table():
                 sentinel = 0
             # otherwise, advance round
             elif self.left_to_act == []:
+                if round == 1:# preflop to flop, deal 3 com_cards
+                    self.com_cards.append(self.deck.draw_card())
+                    self.com_cards.append(self.deck.draw_card())
+                    self.com_cards.append(self.deck.draw_card())
+                elif round == 2:# flop to turn, deal 1 com_card
+                    self.com_cards.append(self.deck.draw_card())
+                elif round == 3:# turn to river, deal 1 com_card
+                    self.com_cards.append(self.deck.draw_card())
                 self.round += 1
                 # reset players chips this round, BUT NOT chips_in_pot
                 for plyr in self.seat_order:
                     self.plyr_dict[plyr].chips_this_round = 0
-                self.left_to_act = self.seat_order[1:] + self.seat_order[:1]
+                    if plyr in self.in_hand:
+                        self.left_to_act.append(plyr)
+                # set left_to_act to all players still in_hand starting from dealer+1
                 
 
 
