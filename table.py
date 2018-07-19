@@ -155,7 +155,7 @@ class Table():
         self.plyr_dict[plyr].contribute_chips(amount)
         self.cost_to_play += amount
         self.min_bet = amount
-        repop_left_to_act(plyr)
+        self.repop_left_to_act(plyr)
         
     
     def check(self, plyr):
@@ -175,7 +175,7 @@ class Table():
         self.plyr_dict[plyr].contribute_chips(amount)
         self.pot += amount
         self.cost_to_play += amount
-        repop_left_to_act(plyr)
+        self.repop_left_to_act(plyr)
     
     def fold(self, plyr):
         self.left_to_act.remove(plyr)
@@ -192,25 +192,33 @@ class Table():
             # bet/check/fold if table.cost_to_play == playerN.chips_this_round
             # call/raze/fold if table.cost_to_play > playerN.chips_this_round
             if self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
-                act = input("test input without validation, input C for call c for check, b, r, f")
-                amount = input("enter amount, if ncsry")
+                print(plyr_str)
+                act = input("input C for call c for check, b, r, f")
+                amount = int(input("enter amount, if ncsry"))
                 action = (act, amount)
             else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
                 action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
             # apply action
             if action[0] == 'b':
-                bet(plyr_str, action[1])
+                self.bet(plyr_str, action[1])
             elif action[0] == 'r':
-                raze(plyr_str, action[1])
+                self.raze(plyr_str, action[1])
             elif action[0] == 'C':
-                call(plyr_str, action[1])
+                self.call(plyr_str, action[1])
             elif action[0] == 'f':
-                fold(plyr_str)
+                self.fold(plyr_str)
             elif action[0] == 'c':
                 self.check(plyr_str)
                 
             # DEBUG
-            print('left2act == ',self.left_to_act)
+            print('left_to_act == ',self.left_to_act)
+            print('in_hand == ',self.in_hand)
+            print('pot == ', self.pot)
+            for p in self.seat_order:
+                print(p,' chips_this_round ',self.plyr_dict[p].chips_this_round)
+                print(p,' chips_in_pot ',self.plyr_dict[p].chips_in_pot)
+                print(p,' stack_size ',self.plyr_dict[p].stack_size)
+                print('cost_to_play is ',self.cost_to_play)
             # DEBUG
             # Check for end of round/hand
             if len(self.in_hand) == 1:
