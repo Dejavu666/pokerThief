@@ -153,7 +153,7 @@ class Table():
         assert(amount >= self.min_bet)
         assert(amount <= self.plyr_dict[plyr].stack_size)
         self.plyr_dict[plyr].contribute_chips(amount)
-        self.cost_to_play += amount
+        self.cost_to_play = amount
         self.min_bet = amount
         self.repop_left_to_act(plyr)
         
@@ -171,9 +171,9 @@ class Table():
     # raise/raze prevent name collision/reuse with raise python keyword
     def raze(self, plyr, amount):
         assert(amount >= self.min_bet)
-        assert(amount <= self.plyr_dict[plyr].stack_size)
-        self.plyr_dict[plyr].contribute_chips(amount)
-        self.pot += amount
+        assert(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round <= self.plyr_dict[plyr].stack_size)
+        self.plyr_dict[plyr].contribute_chips(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round)
+        self.pot += amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round
         self.cost_to_play += amount
         self.repop_left_to_act(plyr)
     
@@ -198,6 +198,17 @@ class Table():
             # call/raze/fold if table.cost_to_play > playerN.chips_this_round
             if self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
                 print(plyr_str)
+                print('players left to act this round == ', self.left_to_act)
+                print('players still in the hand == ' , self.in_hand)
+                print('round is ', self.round)
+                print('community cards == ', self.com_cards)
+                print('your hole cards == ', self.plyr_dict[plyr_str].hand)
+                print('your stack_size == ', self.plyr_dict[plyr_str].stack_size)
+                print('your chips this round == ', self.plyr_dict[plyr_str].chips_this_round)
+                print('your chips in the pot == ', self.plyr_dict[plyr_str].chips_in_pot)
+                print('the pot == ', self.pot)
+                print('cost_to_play == ', self.cost_to_play)
+                print('cost to you is ', self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round)
                 act = input("input C for call c for check, b, r, f")
                 amount = int(input("enter amount, if ncsry"))
                 action = (act, amount)
@@ -215,40 +226,32 @@ class Table():
             elif action[0] == 'c':
                 self.check(plyr_str)
                 
-            # DEBUG
-            print('left_to_act == ',self.left_to_act)
-            print('in_hand == ',self.in_hand)
-            print('pot == ', self.pot)
-            for p in self.seat_order:
-                print(p,' chips_this_round ',self.plyr_dict[p].chips_this_round)
-                print(p,' chips_in_pot ',self.plyr_dict[p].chips_in_pot)
-                print(p,' stack_size ',self.plyr_dict[p].stack_size)
-                print('cost_to_play is ',self.cost_to_play)
-            # DEBUG
             # Check for end of round/hand
             if len(self.in_hand) == 1:
-                # reward remaining player
+                # reward remaining player, exit loop
                 sentinel = 0
             elif self.left_to_act == [] and self.round == 4:
-                # showdown()
+                # showdown(), exit loop
                 sentinel = 0
             # otherwise, advance round
             elif self.left_to_act == []:
-                if round == 1:# preflop to flop, deal 3 com_cards
+                if self.round == 1:# preflop to flop, deal 3 com_cards
                     self.com_cards.append(self.deck.draw_card())
                     self.com_cards.append(self.deck.draw_card())
                     self.com_cards.append(self.deck.draw_card())
-                elif round == 2:# flop to turn, deal 1 com_card
+                elif self.round == 2:# flop to turn, deal 1 com_card
                     self.com_cards.append(self.deck.draw_card())
-                elif round == 3:# turn to river, deal 1 com_card
+                elif self.round == 3:# turn to river, deal 1 com_card
                     self.com_cards.append(self.deck.draw_card())
+                # advance round
                 self.round += 1
+                # reset cost_to_play
+                self.cost_to_play = 0
                 # reset players chips this round, BUT NOT chips_in_pot
                 for plyr in self.seat_order:
                     self.plyr_dict[plyr].chips_this_round = 0
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
-                # set left_to_act to all players still in_hand starting from dealer+1
                 
 
 
