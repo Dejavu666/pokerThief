@@ -216,6 +216,22 @@ class Table():
                 # special case # big blind gets raise option on preflop round only
                 # special special case, big blind is different position when heads up (2 players) (still gets option)
                 # what about 3xspecialcase when above is true but not enough chips for legal raise?
+################### New New
+                # if 2 player:
+                    # if round1 and plyr is D+1 and minbet is bb:
+                        # present bb option check/raise/fold
+                    # elif table not open:
+                        # present call/raise/fold
+                    # elif table is open:
+                        # present bet/check/fold
+                # else (more than 2 player):
+                    # if round1 and plyr is D+2 and minbet is bb:
+                        # present bb option check/raise/fold
+                    # elif table not open:
+                        # present call/raise/fold
+                    # elif table open:
+                        # present bet/check/fold
+###################
                 if self.round == 1 and len(self.seat_order) == 2 and plyr_str == self.seat_order[1]:
                     # table has not been raised past big blind
                     if self.cost_to_play == self.big_blind:# present special options raise,check,fold
@@ -223,7 +239,8 @@ class Table():
                         if act == 'r':
                             amount = input('How much to raise? Between ', str(min(self.plyr_dict[plyr_str].stack,self.big_blind)),' and ', str(self.plyr_dict[plyr_str].stack))
                 # special case but more than 2 players, regular big blind position
-                elif self.round == 1 and len(self.seat_order)>2:
+                elif self.round == 1 and len(self.seat_order)>2:#BUG HERE, need elif for next statement
+                # but need to avoid indexing seat_order[2] in case only 2 players
                     # guard against out of bounds index
                     if plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:# big blind options
                         act = input('r for raise, c for check, f for fold ')
@@ -272,8 +289,8 @@ class Table():
             elif self.left_to_act == [] and self.round == 4:
                 # showdown(), exit loop
                 sentinel = 0
-            # otherwise, advance round
-            elif self.left_to_act == []:
+######################################### OTHERWISE ADVANCE TO NEXT ROUND
+            elif len(self.left_to_act) == 0:
                 if self.round == 1:# preflop to flop, deal 3 com_cards
                     self.com_cards.append(self.deck.draw_card())
                     self.com_cards.append(self.deck.draw_card())
