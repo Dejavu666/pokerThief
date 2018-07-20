@@ -2,8 +2,8 @@ from random import randrange
 # Players are instantiated in a dict belonging to a Table object
 # keys are the Player's name, values are the Player instance
 class Player():
-    def __init__(self, stack_size=0):
-        self.stack_size = stack_size
+    def __init__(self, stack=0):
+        self.stack = stack
         self.hand = []
         # tracks how many chips have been bet by a player this round, reset every round
         self.chips_this_round = 0
@@ -18,16 +18,16 @@ class Player():
         self.hand.append(card)
         
     def contribute_chips(self, amount):
-        assert(amount <= self.stack_size)
+        assert(amount <= self.stack)
         self.chips_in_pot += amount
         self.chips_this_round += amount
-        self.stack_size -= amount
+        self.stack -= amount
     
     def clean_player():
         self.hand = []
         self.chips_this_round = 0
         self.chips_in_pot = 0
-        self.start_stack = self.stack_size
+        self.start_stack = self.stack
     
     # bot needs all irreducible info, but start with:
     # stacksize, cost2play, com_cards,
@@ -38,7 +38,7 @@ class Player():
             # AI INTERFACE GOES HERE
             randval = randrange(0,1)
             if randval == 0:
-                amount = randrange(bb,self.stack_size)
+                amount = randrange(bb,self.stack)
                 return ('bet',amount)
             elif randval == 1:
                 return ('check',0)
@@ -46,9 +46,9 @@ class Player():
             assert(cost2play > self.chips_this_round)
             randval = randrange(0,2)
             if randval == 0:
-                return ('call',min(self.stack_size, cost2play-self.chips_this_round))
+                return ('call',min(self.stack, cost2play-self.chips_this_round))
             elif randval == 1:
-                amount = randrange(min(minbet,self.stack_size), self.stack_size)
+                amount = randrange(min(minbet,self.stack), self.stack)
                 return ('raise', amount)
             elif randval == 2:
                 return ('fold',0)
@@ -59,10 +59,10 @@ class Player():
 # from random import randrange
     # check or bet
 #     def getRandomCheckAction(self,plyr,table):
-#         if table.minBet >= table.plyrDct[plyr].stack_size:
-#             amount = table.plyrDct[plyr].stack_size
+#         if table.minBet >= table.plyrDct[plyr].stack:
+#             amount = table.plyrDct[plyr].stack
 #         else:
-#             amount = randrange(table.minBet, table.plyrDct[plyr].stack_size)
+#             amount = randrange(table.minBet, table.plyrDct[plyr].stack)
 #         return ("check",0) if randrange(0,2) else ("bet",amount)
 #     # fold, call, or raise
 #     def getRandomCallAction(self,plyr,table):
@@ -72,10 +72,10 @@ class Player():
 #         elif choice == 1:
 #             return ("call",0)
 #         else:
-#             if table.costToPlay >= table.plyrDct[plyr].stack_size:
-#                 amount = table.plyrDct[plyr].stack_size
+#             if table.costToPlay >= table.plyrDct[plyr].stack:
+#                 amount = table.plyrDct[plyr].stack
 #             else:
-#                 amount = randrange(table.costToPlay, table.plyrDct[plyr].stack_size)
+#                 amount = randrange(table.costToPlay, table.plyrDct[plyr].stack)
 #             return ("raise",amount)
 # 
 #     
