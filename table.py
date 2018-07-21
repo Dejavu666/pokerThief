@@ -1,7 +1,25 @@
-# some table attributes are mutable some are immutable, some ints some lists mainly
+# Work in progress, many shims until gui for testing
+
+# Organization / Use
+# python table.py
+
+# Table class instance holds dictionary with keys=='player_name_string': value==Player_class_instance
+# Table holds community objects and context of current play such as community cards and legal bet amounts
+# Player instances hold attributes relevant to themselves like hole cards and stack
+
+# Table needs num_players, num_chips, big_blind on init
+# plyr_dict is populated
+# call post_blinds()
+# call play_hand_loop() to continue play until hand is resolved
+# either reward player OR one or more showdowns with optional create_sidepots
+# move button to next player with stack
+# clean, remove players with no stack, prompt for optional next hand
 
 # TO DO 
+# insert create_sidepots()
 # add showdown()
+# have showdown() take one pot with eligible players, so when multiple 'pots with eligible players' are created
+# with create_sidepots(), each is resolved with a separate showdown() call
 # how to end, prompt for next hand? How does that interface with GUI?
 
 import player, deck, hands
@@ -169,15 +187,13 @@ class Table():
         self.left_to_act.remove(plyr)
 
     # raise/raze prevent name collision/reuse with raise python keyword
-    def raze(self, plyr, amount):
-        assert(amount >= self.min_bet)
-        assert(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round <= self.plyr_dict[plyr].stack)
+    def raze(self, plyr, raise_amount):
+        assert(raise_amount >= self.min_bet)
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
-        self.pot += amount+true_cost
-        # problem here, does contribute_chips() alter chips_this_rounds... working here
-        print('DEBUG '+str(amount)+' is amount, true cost is: '+str(true_cost))
-        self.plyr_dict[plyr].contribute_chips(amount+true_cost)
-        self.cost_to_play += amount
+        assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
+        self.pot += raise_amount+true_cost
+        self.plyr_dict[plyr].contribute_chips(raise_amount+true_cost)
+        self.cost_to_play += raise_amount
         self.repop_left_to_act(plyr)
     
     def fold(self, plyr):
@@ -185,8 +201,6 @@ class Table():
         self.in_hand.remove(plyr)
 
     # Play-Hand Looping Function
-    # Gets player action and steps through hand/betting-round
-    # Until only 1 player left in_hand or resolved between players with showdown function
     def play_hand_loop(self):
 ################# SOME TESTS #################
         players_chips = 0
@@ -208,11 +222,10 @@ class Table():
         sentinel = 1
         while(sentinel):
             plyr_str = self.left_to_act[0]
-            # Add 'skip player if all-in AND len(self.left2act) >1'
+            # Skip player input if player is all-in (player 'checks')
             if self.plyr_dict[plyr_str].stack == 0:
-                # skip input options, basically check, whether human or bot, no input ncsry
                 act = 'c'
-            # Prompt first player in left_to_act
+            # Otherwise, prompt the player for input
             elif self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
                 #### Print Console Info, temp until GUI
                 print(plyr_str)
@@ -274,11 +287,15 @@ class Table():
                         act = input('b for bet, c for check, f for fold')
                         if act == 'b':
                             amount = input('How much to bet? Between'+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
-######################################### END USER INPUT GUARDS / BEGIN BOT ACTION
-            else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
+######################################### END USER INPUT / BEGIN BOT ACTION
+########### Pass relevant table info, returns tuple like ('r',100) or ('f',0) for raise 100 or fold
+            else:
                 action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
-######################################### END BOT ACTION / BEGIN APPLY HUMAN|BOT ACTION
-            # Apply Input Action
+######################################### END BOT ACTION
+
+            # Apply Input Action to table/player
+            # Action potentially modifies table attributes and attributes of current player only
+            # (player action does not change attributes of other player objects)
             action = (act,int(amount))
             if action[0] == 'b':
                 self.bet(plyr_str, action[1])
@@ -300,24 +317,42 @@ class Table():
                 self.plyr_dict[self.in_hand[0]].stack += self.pot
                 print('your stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
                 self.pot = 0
-##################### TESTS ####
+############### TESTS ####
                 x = 0
                 for p in self.seat_order:
                     x += self.plyr_dict[p].stack
                 assert(x==self.num_chips*self.num_players)
-##################### END TESTS #####
+############### END TESTS #####
                 # clean table, also cleans players, maintains player stacks and table.seat_order
                 self.clean_table_after_hand()
+                
+                
+                # Add 'Another Hand?' option working here
+                
+                
                 sentinel = 0
-            # Check for final bet round
+            # CHECK FOR END OF FINAL ROUND, SHOWDOWN RESOLUTION
             elif self.left_to_act == [] and self.round == 4:
-                # showdown(), exit loop, working here
-                self.showdown()
+                # Check if sidepots are ncsry, if one or more players are all-in
+                for p in self.in_hand:
+                    assert(self.plyr_dict[p].stack >= 0)
+                    if self.plyr_dict[p].stack == 0:
+                        # return type of create_sidepots is list of 2-tuples, 1st elem is pot/int, 2nd is list of
+                        # player strings (players that are eligible for the pot)
+                        pots_w_elig_plyrs = self.create_sidepots()
+                        for pot_&_plyrs in pots_w_elig_plyrs:
+                            self.showdown(pot_&_plyrs)
+                        break
+                else: # for/else loop, if no player is all-in, go to here, just resolve one showdown()
+                    pot_and_plyrs = (self.pot, self.in_hand[:])
+                    self.showdown(pot_and_plyrs)
                 # clean table, players
                 
                 # exit loop
                 sentinel = 0
-######################################### OTHERWISE ADVANCE TO NEXT ROUND
+###################### END SHOWDOWN RESOLUTION ###########
+
+###################### OTHERWISE ADVANCE TO NEXT ROUND ###########
             elif len(self.left_to_act) == 0:
                 if self.round == 1:# preflop to flop, deal 3 com_cards
                     self.com_cards.append(self.deck.draw_card())
@@ -337,8 +372,15 @@ class Table():
                     self.plyr_dict[plyr].chips_this_round = 0
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
-
-    def showdown(self):
+    # Takes input like this (pot, [list_of_eligible_players])
+    # Determine if one or more players has the highest hand_rank
+    # if more than one player is tied for highest hand_rank,
+    # attempt to resolve ties
+    # of players with highest hand_rank, remove any that do not have the highest tie_break value for that hand type
+    # reward remaining player(s): pot divided by num players
+    # in the case of a remainder, distribute the remainder, one by one starting from self.seat_order[1] (index always exists) and continuing to the end of seat_order and back again to the beginning to the end and so on until all chips are
+    # distributed
+    def showdown(self, pot_and_player_tuple):
         pass
 
 
