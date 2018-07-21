@@ -152,6 +152,7 @@ class Table():
     def bet(self, plyr, amount):
         assert(amount >= self.min_bet)
         assert(amount <= self.plyr_dict[plyr].stack)
+        self.pot += amount
         self.plyr_dict[plyr].contribute_chips(amount)
         self.cost_to_play = amount
         self.min_bet = amount
@@ -172,8 +173,8 @@ class Table():
     def raze(self, plyr, amount):
         assert(amount >= self.min_bet)
         assert(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round <= self.plyr_dict[plyr].stack)
-        self.plyr_dict[plyr].contribute_chips(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round)
         self.pot += amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round
+        self.plyr_dict[plyr].contribute_chips(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round)
         self.cost_to_play += amount
         self.repop_left_to_act(plyr)
     
@@ -193,11 +194,13 @@ class Table():
         sentinel = 1
         while(sentinel):
             plyr_str = self.left_to_act[0]
+            # Add 'skip player if all-in AND len(self.left2act) >1'
+            if self.plyr_dict[plyr_str].stack == 0:
+                # skip input options, basically check, whether human or bot, no input ncsry
+                act = 'c'
             # Prompt first player in left_to_act
-            # bet/check/fold if table.cost_to_play == playerN.chips_this_round
-            # call/raze/fold if table.cost_to_play > playerN.chips_this_round
-            if self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
-                #### DEBUG #####
+            elif self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
+                #### Print Console Info, temp until GUI
                 print(plyr_str)
                 print('players left to act this round == ', self.left_to_act)
                 print('players still in the hand == ' , self.in_hand)
@@ -210,13 +213,7 @@ class Table():
                 print('the pot == ', self.pot)
                 print('cost_to_play == ', self.cost_to_play)
                 print('cost to you is ', self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round)
-                #### DEBUG ##### all this will be replaced by input validation in GUI, used for testing
-                # if round is 1 and player is BB on unraised pot (min_bet == big_blind),
-                # present check/raze/fold option
-                # special case # big blind gets raise option on preflop round only
-                # special special case, big blind is different position when heads up (2 players) (still gets option)
-                # what about 3xspecialcase when above is true but not enough chips for legal raise?
-################### New New
+################ Begin Input Logic
                 # if 2 player:
                 if len(self.seat_order) == 2:
                     # if round1 and plyr is D+1 and cost_to_play has not changed:
@@ -224,7 +221,7 @@ class Table():
                         # present bb option check/raise/fold
                         act = input('c for check, r for raise, f for fold')
                         if act == 'r':
-                            amount = input('raise how much? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
+                            amount = input('raise how much? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
                     # elif table not open:
                     elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round > 0:
                         # present call/raise/fold
@@ -233,21 +230,21 @@ class Table():
                             act = 'C'
                             amount = min(self.plyr_dict[plyr_str].stack, self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
                         elif act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack, self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack, self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
                     # elif table is open:
                     elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
                         # present bet/check/fold
                         act = input('b for bet, c for check, f for fold')
                         if act == 'b':
                             amount = input('How much to bet? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
-                # else (more than 2 player):
+                # else (MORE THAN 2 PLAYER):
                 elif len(self.seat_order) > 2:
                     # if round1 and plyr is D+2 and cost_to_play has not changed:
                     if self.round == 1 and plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:
                         # present bb option check/raise/fold
                         act = input('c for check, r for raise, f for fold')
                         if act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
                     # elif table not open:
                     elif self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round > 0:
                         # present call/raise/fold
@@ -256,7 +253,7 @@ class Table():
                             act = 'C'
                             amount = min(self.plyr_dict[plyr_str].stack,self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
                         elif act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
                     # elif table open:
                     elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
                         # present bet/check/fold
@@ -267,7 +264,7 @@ class Table():
             else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
                 action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
 ######################################### END BOT ACTION / BEGIN APPLY HUMAN|BOT ACTION
-            # apply action
+            # Apply Input Action
             action = (act,int(amount))
             if action[0] == 'b':
                 self.bet(plyr_str, action[1])
@@ -279,7 +276,8 @@ class Table():
                 self.fold(plyr_str)
             elif action[0] == 'c':
                 self.check(plyr_str)
-######################################### END APPLY ACTION / BEGIN END_ROUND
+######################################### END APPLY INPUT ACTION / BEGIN END_ROUND
+            # skip to here if player is all-in, skip input
             # Check if only one player remains in hand
             if len(self.in_hand) == 1:
                 # reward remaining player, exit loop
