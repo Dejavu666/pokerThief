@@ -218,52 +218,51 @@ class Table():
                 # what about 3xspecialcase when above is true but not enough chips for legal raise?
 ################### New New
                 # if 2 player:
-                    # if round1 and plyr is D+1 and minbet is bb:
+                if len(self.seat_order) == 2:
+                    # if round1 and plyr is D+1 and cost_to_play has not changed:
+                    if self.round == 1 and plyr_str == self.seat_order[1] and self.cost_to_play == self.big_blind:
                         # present bb option check/raise/fold
+                        act = input('c for check, r for raise, f for fold')
+                        if act == 'r':
+                            amount = input('raise how much? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
                     # elif table not open:
+                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round > 0:
                         # present call/raise/fold
+                        act = input('c for call, r for raise, f for fold')
+                        if act == 'c':
+                            act = 'C'
+                            amount = min(self.plyr_dict[plyr_str].stack, self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
+                        elif act == 'r':
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack, self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
                     # elif table is open:
+                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
                         # present bet/check/fold
+                        act = input('b for bet, c for check, f for fold')
+                        if act == 'b':
+                            amount = input('How much to bet? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
                 # else (more than 2 player):
-                    # if round1 and plyr is D+2 and minbet is bb:
+                elif len(self.seat_order) > 2:
+                    # if round1 and plyr is D+2 and cost_to_play has not changed:
+                    if self.round == 1 and plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:
                         # present bb option check/raise/fold
+                        act = input('c for check, r for raise, f for fold')
+                        if act == 'r':
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
                     # elif table not open:
+                    elif self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round > 0:
                         # present call/raise/fold
+                        act = input('c for call, r for raise, f for fold')
+                        if act == 'c':
+                            act = 'C'
+                            amount = min(self.plyr_dict[plyr_str].stack,self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
+                        elif act == 'r':
+                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
                     # elif table open:
+                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
                         # present bet/check/fold
-###################
-                if self.round == 1 and len(self.seat_order) == 2 and plyr_str == self.seat_order[1]:
-                    # table has not been raised past big blind
-                    if self.cost_to_play == self.big_blind:# present special options raise,check,fold
-                        act = input('r for raise, c for check, f for fold ')
-                        if act == 'r':
-                            amount = input('How much to raise? Between ', str(min(self.plyr_dict[plyr_str].stack,self.big_blind)),' and ', str(self.plyr_dict[plyr_str].stack))
-                # special case but more than 2 players, regular big blind position
-                elif self.round == 1 and len(self.seat_order)>2:#BUG HERE, need elif for next statement
-                # but need to avoid indexing seat_order[2] in case only 2 players
-                    # guard against out of bounds index
-                    if plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:# big blind options
-                        act = input('r for raise, c for check, f for fold ')
-                        if act == 'r':
-                            amount = input('How much to raise? Between '+ str(min(self.plyr_dict[plyr_str].stack,self.big_blind))+' and '+ str(self.plyr_dict[plyr_str].stack))
-                ##########################
-                # table open is different on round 1 and rounds after
-                elif self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round == 0:
-                    act = input('b for bet, c for check, f for fold ')
-                    if act == 'b':
-                        amount = input('how much to bet? Between '+str(min(self.min_bet,self.plyr_dict[plyr_str].stack))+\
-                        ' and '+str(self.plyr_dict[plyr_str].stack))
-                    else:
-                        amount = 0
-                else:
-                    act = input('c for call, r for raise, f for fold ')
-                    if act == 'c':
-                        act = 'C'
-                        amount = min(self.plyr_dict[plyr_str].stack,self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
-                    elif act == 'r':
-                        amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack, self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round))+ ' and '+ str(self.plyr_dict[plyr_str].stack))
-                    elif act == 'f':
-                        amount = 0
+                        act = input('b for bet, c for check, f for fold')
+                        if act == 'b':
+                            amount = input('How much to bet? Between'+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
 ######################################### END USER INPUT GUARDS / BEGIN BOT ACTION
             else:#gethotbotaction , pass relevant table info, returns tuple like ('raise',100) or ('fold',0)
                 action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
