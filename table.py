@@ -1,9 +1,8 @@
-# table.py
-
-# Notes
 # generalization - a raise is the same as a bet, functionally. Except that the first is a bet, proceeding are raises
 # some table attributes are mutable some are immutable, some ints some lists mainly
 
+# TO DO 
+# Reset min_bet between rounds
 
 import player, deck, hands
 from random import shuffle
@@ -186,6 +185,17 @@ class Table():
     # Gets player action and steps through hand/betting-round
     # Until only 1 player left in_hand or resolved between players with showdown function
     def play_hand_loop(self):
+################# SOME TESTS #################
+        players_chips = 0
+        for p in self.seat_order:
+            players_chips += self.plyr_dict[p].stack
+        begin_chips = self.num_chips*self.num_players
+        # Check that chips are always subtracted and added at the same rate (total number of chips is same)
+        # Does not ncsrly mean that they are added and subtracted appropriately, only correctly
+        # For example: a raise may subtract an amount equal to the amount added to pot, but the raise amounts
+        # COULD be illegal (shouldnt be as of writing this)
+        assert(self.pot+players_chips==begin_chips)
+        ################# END TESTS ############
         # deal hole cards to players
         for p in self.seat_order:
             self.plyr_dict[p].draw_card(self.deck.draw_card())
