@@ -1,10 +1,7 @@
-# generalization - a raise is the same as a bet, functionally. Except that the first is a bet, proceeding are raises
 # some table attributes are mutable some are immutable, some ints some lists mainly
 
 # TO DO 
-# Clean players and table after hand(not round)
 # add showdown()
-# reward if just one player remains
 # how to end, prompt for next hand? How does that interface with GUI?
 
 import player, deck, hands
@@ -201,12 +198,13 @@ class Table():
         # For example: a raise may subtract an amount equal to the amount added to pot, but the raise amounts
         # COULD be illegal (shouldnt be as of writing this)
         assert(self.pot+players_chips==begin_chips)
-        ################# END TESTS ############
+################# END TESTS ############
         # deal hole cards to players
         for p in self.seat_order:
             self.plyr_dict[p].draw_card(self.deck.draw_card())
         for p in self.seat_order:
             self.plyr_dict[p].draw_card(self.deck.draw_card())
+################# BEGIN LOOP #################
         sentinel = 1
         while(sentinel):
             plyr_str = self.left_to_act[0]
@@ -229,8 +227,8 @@ class Table():
                 print('the pot == ', self.pot)
                 print('cost_to_play == ', self.cost_to_play)
                 print('cost to you is ', self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round)
-################ Begin Input Logic
-                # if 2 player:
+################ Begin Input Logic, constraints become input validation in GUI
+                # IF ONLY 2 PLAYERS:
                 if len(self.seat_order) == 2:
                     # if round1 and plyr is D+1 and cost_to_play has not changed:
                     if self.round == 1 and plyr_str == self.seat_order[1] and self.cost_to_play == self.big_blind:
@@ -253,7 +251,7 @@ class Table():
                         act = input('b for bet, c for check, f for fold')
                         if act == 'b':
                             amount = input('How much to bet? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
-                # else (MORE THAN 2 PLAYER):
+################## else (MORE THAN 2 PLAYER):
                 elif len(self.seat_order) > 2:
                     # if round1 and plyr is D+2 and cost_to_play has not changed:
                     if self.round == 1 and plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:
@@ -293,29 +291,31 @@ class Table():
             elif action[0] == 'c':
                 self.check(plyr_str)
 ######################################### END APPLY INPUT ACTION / BEGIN END_ROUND
-            # skip to here if player is all-in, skip input
-            # By here, player's action will have removed them from self.left_to_act (also in_hand if fold)
+            # skip to here if player is all-in, having skipped input
+            # By here, player's action will have removed them from self.left_to_act (from in_hand if fold)
             # Check if only one player remains in hand
             if len(self.in_hand) == 1:
                 # reward remaining player
-                print('prewin stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
                 print('!!! winner of '+str(self.pot)+' chips!!!')
                 self.plyr_dict[self.in_hand[0]].stack += self.pot
                 print('your stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
                 self.pot = 0
-                #### TESTS ####
+##################### TESTS ####
                 x = 0
                 for p in self.seat_order:
                     x += self.plyr_dict[p].stack
                 assert(x==self.num_chips*self.num_players)
-                #### END TESTS #####
+##################### END TESTS #####
                 # clean table, also cleans players, maintains player stacks and table.seat_order
                 self.clean_table_after_hand()
-                # working here
                 sentinel = 0
             # Check for final bet round
             elif self.left_to_act == [] and self.round == 4:
-                # showdown(), exit loop
+                # showdown(), exit loop, working here
+                self.showdown()
+                # clean table, players
+                
+                # exit loop
                 sentinel = 0
 ######################################### OTHERWISE ADVANCE TO NEXT ROUND
             elif len(self.left_to_act) == 0:
@@ -337,7 +337,9 @@ class Table():
                     self.plyr_dict[plyr].chips_this_round = 0
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
-                
+
+    def showdown(self):
+        pass
 
 
 ####### TEST #######
