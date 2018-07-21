@@ -8,7 +8,7 @@ class Player():
         # tracks how many chips have been bet by a player this round, reset every round
         self.chips_this_round = 0
         # tracks how many chips a player has at the begin of a hand
-        self.start_stack = 0
+        self.begin_hand_chips = 0
         # tracks how much player has contributed to a pot, reset every hand
         self.chips_in_pot = 0
         # signify if instance is human or computer
@@ -21,13 +21,16 @@ class Player():
         assert(amount <= self.stack)
         self.chips_in_pot += amount
         self.chips_this_round += amount
+        print('debug4 '+str(self.stack))
         self.stack -= amount
+        print('debug5 '+str(self.stack))
     
-    def clean_player():
+    # Reset player after hand(not round)
+    def clean_player_after_hand(self):
         self.hand = []
         self.chips_this_round = 0
         self.chips_in_pot = 0
-        self.start_stack = self.stack
+        self.begin_hand_chips = self.stack
     
     # bot needs all irreducible info, but start with:
     # stacksize, cost2play, com_cards,

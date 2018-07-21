@@ -2,7 +2,10 @@
 # some table attributes are mutable some are immutable, some ints some lists mainly
 
 # TO DO 
-# Reset min_bet between rounds
+# Clean players and table after hand(not round)
+# add showdown()
+# reward if just one player remains
+# how to end, prompt for next hand? How does that interface with GUI?
 
 import player, deck, hands
 from random import shuffle
@@ -91,9 +94,9 @@ class Table():
         self.cost_to_play = self.big_blind
         
     # At end of hand, if a player is all-in, run this
-    # For each player in_hand and 'all-in', in order of ascending start_stack
-    # Create a sidepot by contributing from each other player: max(player.start_stack, other_player.chips_in_pot)
-    # The player or players whose equivalent start_stack values were used to create this sidepot...
+    # For each player in_hand and 'all-in', in order of ascending begin_hand_chips
+    # Create a sidepot by contributing from each other player: max(player.begin_hand_chips, other_player.chips_in_pot)
+    # The player or players whose equivalent begin_hand_chips values were used to create this sidepot...
     # are eligible for this pot and no further created pots
     # When all chips from table.pot are consumed, the current pot that finished consuming them is the 'main' pot
     # All remaining players are eligible for this and all previous pots
@@ -107,9 +110,9 @@ class Table():
         all_in = []
         for plyr in self.seat_order:
             if plyr in self.in_hand and self.plyr_dict[plyr].stack == 0:# if player is all-in
-                all_in.append((self.plyr_dict[plyr].start_stack, plyr))
+                all_in.append((self.plyr_dict[plyr].begin_hand_chips, plyr))
         all_in.sort()
-        # all_in looks like: [(lowest_plyr.start_stack, lowest_plyr_str),...
+        # all_in looks like: [(lowest_plyr.begin_hand_chips, lowest_plyr_str),...
         # just consume players that are all-in, only they need sidepots
         all_in_cpy = all_in[:]
         for stack_plyr_tup in all_in:
@@ -128,7 +131,7 @@ class Table():
                     players_in_hand.remove(player)
                     all_in_copy = all_in_copy[1:] # modify object while looping on it
 
-    def clean_table(self):
+    def clean_table_after_hand(self):
         self.pot = 0
         self.com_cards = []
         self.min_bet = self.big_blind
@@ -137,7 +140,7 @@ class Table():
         self.in_hand = []
         self.cost_to_play = 0
         for plyr in self.seat_order:
-            self.plyr_dict[plyr].clean_player()
+            self.plyr_dict[plyr].clean_player_after_hand()
 
     # Starting from the plyr_str's index+1 in seat_order, if player is in_hand but not in left2act,
     # append player to left2act
@@ -172,8 +175,11 @@ class Table():
     def raze(self, plyr, amount):
         assert(amount >= self.min_bet)
         assert(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round <= self.plyr_dict[plyr].stack)
-        self.pot += amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round
-        self.plyr_dict[plyr].contribute_chips(amount+self.cost_to_play-self.plyr_dict[plyr].chips_this_round)
+        true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
+        self.pot += amount+true_cost
+        # problem here, does contribute_chips() alter chips_this_rounds... working here
+        print('DEBUG '+str(amount)+' is amount, true cost is: '+str(true_cost))
+        self.plyr_dict[plyr].contribute_chips(amount+true_cost)
         self.cost_to_play += amount
         self.repop_left_to_act(plyr)
     
@@ -288,9 +294,24 @@ class Table():
                 self.check(plyr_str)
 ######################################### END APPLY INPUT ACTION / BEGIN END_ROUND
             # skip to here if player is all-in, skip input
+            # By here, player's action will have removed them from self.left_to_act (also in_hand if fold)
             # Check if only one player remains in hand
             if len(self.in_hand) == 1:
-                # reward remaining player, exit loop
+                # reward remaining player
+                print('prewin stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
+                print('!!! winner of '+str(self.pot)+' chips!!!')
+                self.plyr_dict[self.in_hand[0]].stack += self.pot
+                print('your stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
+                self.pot = 0
+                #### TESTS ####
+                x = 0
+                for p in self.seat_order:
+                    x += self.plyr_dict[p].stack
+                assert(x==self.num_chips*self.num_players)
+                #### END TESTS #####
+                # clean table, also cleans players, maintains player stacks and table.seat_order
+                self.clean_table_after_hand()
+                # working here
                 sentinel = 0
             # Check for final bet round
             elif self.left_to_act == [] and self.round == 4:
@@ -308,8 +329,9 @@ class Table():
                     self.com_cards.append(self.deck.draw_card())
                 # advance round
                 self.round += 1
-                # reset cost_to_play
+                # reset cost_to_play, min_bet
                 self.cost_to_play = 0
+                self.min_bet = self.big_blind
                 # reset players chips this round, BUT NOT chips_in_pot
                 for plyr in self.seat_order:
                     self.plyr_dict[plyr].chips_this_round = 0
