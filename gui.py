@@ -10,12 +10,17 @@ from tkinter.constants import *
 
 tk = tkinter.Tk()
 table = table.Table(4,1000,20)
+for p in table.seat_order:
+    table.plyr_dict[p].human = 1
 
-frame = tkinter.Frame(tk, relief=RIDGE,borderwidth=2)
-frame.pack(fill=BOTH, expand=1)
+frame = tkinter.Frame(tk, relief=RIDGE, borderwidth=2, width=1200)
+frame.pack(expand=1)
 
-label = tkinter.Label(frame,text='hello mars')
-label.pack(fill=X, expand=1)
+title_label = tkinter.Label(frame,text='PokerMage')
+title_label.pack(fill=X, expand=1)
+
+pot_label = tkinter.Label(frame, text=str(table.pot))
+pot_label.pack(fill=X, expand=1)
 
 button = tkinter.Button(frame, text='start game',command=table.play_hand_loop)
 button.pack(side=BOTTOM)
