@@ -340,8 +340,8 @@ class Table():
                         # return type of create_sidepots is list of 2-tuples, 1st elem is pot/int, 2nd is list of
                         # player strings (players that are eligible for the pot)
                         pots_w_elig_plyrs = self.create_sidepots()
-                        for pot_&_plyrs in pots_w_elig_plyrs:
-                            self.showdown(pot_&_plyrs)
+                        for pot_n_plyrs in pots_w_elig_plyrs:
+                            self.showdown(pot_n_plyrs)
                         break
                 else: # for/else loop, if no player is all-in, go to here, just resolve one showdown()
                     pot_and_plyrs = (self.pot, self.in_hand[:])
@@ -372,7 +372,7 @@ class Table():
                     self.plyr_dict[plyr].chips_this_round = 0
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
-    # Takes input like this (pot, [list_of_eligible_players])
+                #### CONTINUE LOOP ####
     # Determine if one or more players has the highest hand_rank
     # if more than one player is tied for highest hand_rank,
     # attempt to resolve ties
@@ -380,7 +380,13 @@ class Table():
     # reward remaining player(s): pot divided by num players
     # in the case of a remainder, distribute the remainder, one by one starting from self.seat_order[1] (index always exists) and continuing to the end of seat_order and back again to the beginning to the end and so on until all chips are
     # distributed
+    # Takes input like this (pot, [list_of_eligible_players])
     def showdown(self, pot_and_player_tuple):
+        # Get highest hand_rank
+        
+        # if one winner: award player
+        
+        # else: get winners, apply tie_break
         pass
 
 
@@ -401,8 +407,15 @@ class Table():
 # create mock data with AT LEAST one player all-in/in-hand
 
 table = Table(4,200,20)
+table.com_cards.append(table.deck.draw_card())
+table.com_cards.append(table.deck.draw_card())
+table.com_cards.append(table.deck.draw_card())
+table.com_cards.append(table.deck.draw_card())
+table.com_cards.append(table.deck.draw_card())
 # set all players to human
-for player in table.seat_order:
-    table.plyr_dict[player].human = 1
-table.post_blinds()
-table.play_hand_loop()
+for p in table.seat_order:
+    table.plyr_dict[p].human = 1
+    table.plyr_dict[p].hand.append(table.deck.draw_card())
+    table.plyr_dict[p].hand.append(table.deck.draw_card())
+    hands.assign_hand_rank(p, table)
+
