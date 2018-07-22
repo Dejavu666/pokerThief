@@ -17,6 +17,9 @@
 # TO DO 
 
 # Fix input hint of 4player, utg raises, call, call, BB's raise minimum is too low, amounts are correct
+# not just bb raise min, reraise min is too low
+
+# take away illegal options, raise/bet with only enough chips to call
 # Change first call of post_blinds() to inside play_hand_loop(), remove from showdown/resolution
 # Test create_sidepots() with edge cases
 # Should be provably correct with input validation
@@ -206,6 +209,7 @@ class Table():
         self.pot += raise_amount+true_cost
         self.plyr_dict[plyr].contribute_chips(raise_amount+true_cost)
         self.cost_to_play += raise_amount
+        self.min_bet = raise_amount
         self.repop_left_to_act(plyr)
     
     def fold(self, plyr):
