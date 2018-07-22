@@ -126,7 +126,7 @@ class Table():
     def create_sidepots(self):
         players_in_hand = self.in_hand[:]
         pot_chips = self.pot
-        pots_w_elig_plyrs = []
+        pots_w_elig_players = []
         all_in = []
         for plyr in self.seat_order:
             if plyr in self.in_hand and self.plyr_dict[plyr].stack == 0:# if player is all-in
@@ -142,7 +142,7 @@ class Table():
                 sidepot += amount
                 pot_chips -= amount
                 if pot_chips == 0:# pot is consumed, current sidepot is mainpot
-                    pots_w_elig_players.append((sidepot, [players_in_hand]))
+                    pots_w_elig_players.append((sidepot, players_in_hand))
                     return pots_w_elig_players
             # remove players with equiv, least chips_in_pot from players_in_hand
             low_stack = all_in_copy[0][0]
@@ -345,16 +345,23 @@ class Table():
                         # player strings (players that are eligible for the pot)
                         pots_w_elig_plyrs = self.create_sidepots()
                         for pot_n_plyrs in pots_w_elig_plyrs:
+                            print(pot_n_plyrs)
                             self.showdown(pot_n_plyrs)
                         break
                 else: # for/else loop, if no player is all-in, go to here, just resolve one showdown()
                     pot_and_plyrs = (self.pot, self.in_hand[:])
                     self.showdown(pot_and_plyrs)
-                # Showdowns complete, players rewarded, chips subtracted from table.pot
-                # clean_table/players
-                
-                # Prompt whether to continue with another play_hand_loop() instead of sentinel
-                sentinel = 0
+                # Showdowns complete, players rewarded
+                # prompt whether to end loop or not
+                value = input('Another hand? y for yes, n for no')
+                self.clean_table_after_hand()
+                if value == 'y':
+                    # move button to next player with chips
+                    # remove players with no chips
+                    # repop left_to_act
+                    sentinel = 1
+                else:
+                    sentinel = 0
 ###################### END SHOWDOWN RESOLUTION ###########
 
 ###################### OTHERWISE ADVANCE TO NEXT ROUND ###########
@@ -378,22 +385,16 @@ class Table():
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
                 #### CONTINUE LOOP ####
-    # Determine if one or more players has the highest hand_rank
-    # if more than one player is tied for highest hand_rank,
-    # attempt to resolve ties
-    # of players with highest hand_rank, remove any that do not have the highest tie_break value for that hand type
-    # reward remaining player(s): pot divided by num players
-    # in the case of a remainder, distribute the remainder, one by one starting from self.seat_order[1] (index always exists) and continuing to the end of seat_order and back again to the beginning to the end and so on until all chips are
-    # distributed
-    # Takes input like this (pot, [list_of_eligible_players])
+
     def showdown(self, pot_and_player_tuple):
         # Get highest hand_rank
         players = pot_and_player_tuple[1]
+        print(players)
         pot = pot_and_player_tuple[0]
         max_rank = 0
         top_plyrs = []
         for plyr in players:
-            hands.assign_hand_rank(plyr, table)
+            hands.assign_hand_rank(plyr, self)
             if self.plyr_dict[plyr].hand_rank > max_rank:
                 top_plyrs = [plyr]
                 max_rank = self.plyr_dict[plyr].hand_rank
@@ -402,6 +403,7 @@ class Table():
         # if one winner: award player
         if len(top_plyrs) == 1:
             # reward top_plyrs[0]
+            print(top_plyrs[0]+' wins '+str(pot))
             self.plyr_dict[top_plyrs[0]].stack += pot
             self.pot -= pot
         else: # tie needs to be broken for this one pot, working bug, what about remainder here?
@@ -409,6 +411,7 @@ class Table():
             amount = pot / len(winners)
             for p in winners:
                 self.plyr_dict[p].stack += amount
+                print(p+' wins DEBUG '+str(pot))
 
 
 ####### TEST #######

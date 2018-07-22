@@ -13,14 +13,14 @@ def break_ties(plyr_list, table):
         for plr in plyr_list:
             if table.plyr_dict[plr].tie_break[0] > highVal:
                 winners = [plr]
-                highVal = plyr_dict[plr].tie_break[0]
-            elif plyr_dict[plr].tie_break[0] == highVal:
+                highVal = table.plyr_dict[plr].tie_break[0]
+            elif table.plyr_dict[plr].tie_break[0] == highVal:
                 winners.append(plr)
-            plyr_dict[plr].tie_break.pop(0)
+            table.plyr_dict[plr].tie_break.pop(0)
         if len(winners) == 1:
             return winners
         # if players have exhausted tie_break values
-        elif plyr_dict[winners[0]].tie_break == []:
+        elif table.plyr_dict[winners[0]].tie_break == []:
             break
     return winners
 
@@ -28,6 +28,8 @@ def break_ties(plyr_list, table):
 # Assigns hand_rank and tie_break values to the Player object
 # Only makes sense to call when Player has 2 cards and table.community has 5
 def assign_hand_rank(plyr, table):
+    print(table.plyr_dict[plyr].hand)
+    print(table.com_cards)
     hand = table.plyr_dict[plyr].hand + table.com_cards
     handranks_w_ace_as_one = []
     for card in hand:
