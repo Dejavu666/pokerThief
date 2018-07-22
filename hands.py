@@ -6,7 +6,7 @@
 
 # Takes a list of player names, ensures they all have the same hand_rank,
 # Returns a list of player name(s) that have true ties (same hand_rank and tie_break value)
-def break_ties(plyr_list):
+def break_ties(plyr_list, table):
     winners = []
     while True:
         highVal = 0

@@ -21,9 +21,7 @@ class Player():
         assert(amount <= self.stack)
         self.chips_in_pot += amount
         self.chips_this_round += amount
-        print('debug4 '+str(self.stack))
         self.stack -= amount
-        print('debug5 '+str(self.stack))
     
     # Reset player after hand(not round)
     def clean_player_after_hand(self):

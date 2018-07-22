@@ -17,7 +17,8 @@
 
 # TO DO 
 
-# FIX hands.straight_flush_finder()
+# division is changing ints to floats in player.stack or table.pot
+# fix remainder chips in showdown()
 # some tie_break lens are 3, is this correct?
 
 # insert create_sidepots()
@@ -296,7 +297,6 @@ class Table():
             else:
                 action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
 ######################################### END BOT ACTION
-
             # Apply Input Action to table/player
             # Action potentially modifies table attributes and attributes of current player only
             # (player action does not change attributes of other player objects)
@@ -350,9 +350,10 @@ class Table():
                 else: # for/else loop, if no player is all-in, go to here, just resolve one showdown()
                     pot_and_plyrs = (self.pot, self.in_hand[:])
                     self.showdown(pot_and_plyrs)
-                # clean table, players
+                # Showdowns complete, players rewarded, chips subtracted from table.pot
+                # clean_table/players
                 
-                # exit loop
+                # Prompt whether to continue with another play_hand_loop() instead of sentinel
                 sentinel = 0
 ###################### END SHOWDOWN RESOLUTION ###########
 
@@ -387,11 +388,27 @@ class Table():
     # Takes input like this (pot, [list_of_eligible_players])
     def showdown(self, pot_and_player_tuple):
         # Get highest hand_rank
-        
+        players = pot_and_player_tuple[1]
+        pot = pot_and_player_tuple[0]
+        max_rank = 0
+        top_plyrs = []
+        for plyr in players:
+            hands.assign_hand_rank(plyr, table)
+            if self.plyr_dict[plyr].hand_rank > max_rank:
+                top_plyrs = [plyr]
+                max_rank = self.plyr_dict[plyr].hand_rank
+            elif self.plyr_dict[plyr].hand_rank == max_rank:
+                top_plyrs.append(plyr)
         # if one winner: award player
-        
-        # else: get winners, apply tie_break
-        pass
+        if len(top_plyrs) == 1:
+            # reward top_plyrs[0]
+            self.plyr_dict[top_plyrs[0]].stack += pot
+            self.pot -= pot
+        else: # tie needs to be broken for this one pot, working bug, what about remainder here?
+            winners = hands.break_ties(top_plyrs, self)
+            amount = pot / len(winners)
+            for p in winners:
+                self.plyr_dict[p].stack += amount
 
 
 ####### TEST #######
@@ -411,18 +428,25 @@ class Table():
 # create mock data with AT LEAST one player all-in/in-hand
 
 table = Table(4,200,20)
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-# set all players to human
 for p in table.seat_order:
     table.plyr_dict[p].human = 1
-    table.plyr_dict[p].hand.append(table.deck.draw_card())
-    table.plyr_dict[p].hand.append(table.deck.draw_card())
-    hands.assign_hand_rank(p, table)
-    print(table.plyr_dict[p].hand+table.com_cards)
-    print(table.plyr_dict[p].hand_rank)
-    print(table.plyr_dict[p].tie_break)
+table.post_blinds()
+table.play_hand_loop()
+
+
+
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# # set all players to human
+# for p in table.seat_order:
+#     table.plyr_dict[p].human = 1
+#     table.plyr_dict[p].hand.append(table.deck.draw_card())
+#     table.plyr_dict[p].hand.append(table.deck.draw_card())
+#     hands.assign_hand_rank(p, table)
+#     print(table.plyr_dict[p].hand+table.com_cards)
+#     print(table.plyr_dict[p].hand_rank)
+#     print(table.plyr_dict[p].tie_break)
 
