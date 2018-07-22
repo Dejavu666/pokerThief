@@ -16,13 +16,17 @@
 
 # TO DO 
 
+# Test create_sidepots() with edge cases
+# Should be provably correct with input validation
+# Current command line parameter 'hints' become input validation
+# (only range of hints is presented as possible input through sliders/buttons, no typed/entered input)
+# This means the range of input is known and testable
 # Start thinking about how to extract data points
 # could I use omniscient perspective for learning? (knowledge of all hole cards)
 # division is changing ints to floats in player.stack or table.pot
 # fix remainder chips in showdown()
 # some tie_break lens are 3, is this correct?
 
-# insert create_sidepots()
 # add showdown()
 # have showdown() take one pot with eligible players, so when multiple 'pots with eligible players' are created
 # with create_sidepots(), each is resolved with a separate showdown() call
