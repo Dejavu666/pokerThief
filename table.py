@@ -16,6 +16,8 @@
 
 # TO DO 
 
+# Fix input hint of 4player, utg raises, call, call, BB's raise minimum is too low, amounts are correct
+# Change first call of post_blinds() to inside play_hand_loop(), remove from showdown/resolution
 # Test create_sidepots() with edge cases
 # Should be provably correct with input validation
 # Current command line parameter 'hints' become input validation
