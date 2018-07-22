@@ -456,10 +456,10 @@ class Table():
 # TESTS for table.create_sidepots
 # create mock data with AT LEAST one player all-in/in-hand
 
-table = Table(4,200,20)
-for p in table.seat_order:
-    table.plyr_dict[p].human = 1
-table.play_hand_loop()
+# table = Table(4,200,20)
+# for p in table.seat_order:
+#     table.plyr_dict[p].human = 1
+# table.play_hand_loop()
 
 
 
