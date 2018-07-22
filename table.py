@@ -16,6 +16,10 @@
 # clean, remove players with no stack, prompt for optional next hand
 
 # TO DO 
+
+# FIX hands.straight_flush_finder()
+# some tie_break lens are 3, is this correct?
+
 # insert create_sidepots()
 # add showdown()
 # have showdown() take one pot with eligible players, so when multiple 'pots with eligible players' are created
@@ -407,15 +411,23 @@ class Table():
 # create mock data with AT LEAST one player all-in/in-hand
 
 table = Table(4,200,20)
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
-table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+# table.com_cards.append(table.deck.draw_card())
+table.com_cards.append((2,'H'))
+table.com_cards.append((3,'H'))
+table.com_cards.append((4,'H'))
 # set all players to human
-for p in table.seat_order:
+table.plyr_dict[table.seat_order[0]].hand.append((5,'H'))
+table.plyr_dict[table.seat_order[0]].hand.append((6,'H'))
+hands.assign_hand_rank(table.seat_order[0], table)
+print(table.plyr_dict[table.seat_order[0]].hand_rank)
+for p in table.seat_order[1:]:
     table.plyr_dict[p].human = 1
     table.plyr_dict[p].hand.append(table.deck.draw_card())
     table.plyr_dict[p].hand.append(table.deck.draw_card())
     hands.assign_hand_rank(p, table)
+    print(table.plyr_dict[p].tie_break)
 

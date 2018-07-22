@@ -38,9 +38,9 @@ def assign_hand_rank(plyr, table):
         else:
             handranks_w_ace_as_one.append(card[0])
     handranks_w_ace_as_one.sort(reverse=True)
-    if straight_flush_finder(hand):
+    if straight_flush_finder(hand, handranks_w_ace_as_one):
         table.plyr_dict[plyr].hand_rank = 9
-        table.plyr_dict[plyr].tie_break = straight_flush_finder(hand)
+        table.plyr_dict[plyr].tie_break = straight_flush_finder(hand, handranks_w_ace_as_one)
     elif four_of_a_kind_finder(hand):
         table.plyr_dict[plyr].hand_rank = 8
         table.plyr_dict[plyr].tie_break = four_of_a_kind_finder(hand)
@@ -69,6 +69,7 @@ def assign_hand_rank(plyr, table):
 
 
 def straight_finder(ranks):
+    ranks = list(set(ranks))
     if len(ranks) < 5:
         return None
     elif (ranks[0]-ranks[4]) == 4:
@@ -128,7 +129,11 @@ def flush_finder(hand):
     else:
         return None
         
-def straight_flush_finder(hand):
+# needs to not rely on sub-functions
+# find all flush cards, at least 5
+# find a straight among those flush cards, you have straight_flush
+# only transform ace if ace is among flush cards
+def straight_flush_finder(hand, ranks):
     if flush_finder(hand):
         if straight_finder(flush_finder(hand)):
             return straight_finder(flush_finder(hand))
