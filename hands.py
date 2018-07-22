@@ -29,7 +29,6 @@ def break_ties(plyr_list):
 # Only makes sense to call when Player has 2 cards and table.community has 5
 def assign_hand_rank(plyr, table):
     hand = table.plyr_dict[plyr].hand + table.com_cards
-    print(hand)
     handranks_w_ace_as_one = []
     for card in hand:
         if card[0] == 14:
@@ -38,9 +37,9 @@ def assign_hand_rank(plyr, table):
         else:
             handranks_w_ace_as_one.append(card[0])
     handranks_w_ace_as_one.sort(reverse=True)
-    if straight_flush_finder(hand, handranks_w_ace_as_one):
+    if straight_flush_finder(hand):
         table.plyr_dict[plyr].hand_rank = 9
-        table.plyr_dict[plyr].tie_break = straight_flush_finder(hand, handranks_w_ace_as_one)
+        table.plyr_dict[plyr].tie_break = straight_flush_finder(hand)
     elif four_of_a_kind_finder(hand):
         table.plyr_dict[plyr].hand_rank = 8
         table.plyr_dict[plyr].tie_break = four_of_a_kind_finder(hand)
@@ -70,6 +69,7 @@ def assign_hand_rank(plyr, table):
 
 def straight_finder(ranks):
     ranks = list(set(ranks))
+    ranks.sort(reverse=True)
     if len(ranks) < 5:
         return None
     elif (ranks[0]-ranks[4]) == 4:
@@ -133,11 +133,21 @@ def flush_finder(hand):
 # find all flush cards, at least 5
 # find a straight among those flush cards, you have straight_flush
 # only transform ace if ace is among flush cards
-def straight_flush_finder(hand, ranks):
-    if flush_finder(hand):
-        if straight_finder(flush_finder(hand)):
-            return straight_finder(flush_finder(hand))
-    return None
+def straight_flush_finder(hand):
+    # get only cards if suit count is >=5
+    flushCards = [card[1] for card in hand]
+    hand = [card for card in hand if flushCards.count(card[1])>=5]
+    if len(hand)<5:
+        return None
+    # if ace exists, add 'one' value, feed flush cards to straight_finder
+    ranks = []
+    for card in hand:
+        if card[0] == 14:
+            ranks.append(1)
+            ranks.append(14)
+        else:
+            ranks.append(card[0])
+    return straight_finder(ranks)
 
 def three_of_a_kind_finder(hand):
     ranks = [card[0] for card in hand]
