@@ -1,9 +1,8 @@
 # Work in progress, many shims until gui for testing
 
-# Organization / Use
-# python table.py
+# Run with "python table.py"
 
-# Table class instance holds dictionary with keys=='player_name_string': value==Player_class_instance
+# Table class instance holds dictionary with keys=='player_name_string' and value==Player_class_instance
 # Table holds community objects and context of current play such as community cards and legal bet amounts
 # Player instances hold attributes relevant to themselves like hole cards and stack
 
@@ -17,6 +16,8 @@
 
 # TO DO 
 
+# Start thinking about how to extract data points
+# could I use omniscient perspective for learning? (knowledge of all hole cards)
 # division is changing ints to floats in player.stack or table.pot
 # fix remainder chips in showdown()
 # some tie_break lens are 3, is this correct?
@@ -329,12 +330,13 @@ class Table():
 ############### END TESTS #####
                 # clean table, also cleans players, maintains player stacks and table.seat_order
                 self.clean_table_after_hand()
-                
-                
-                # Add 'Another Hand?' option working here
-                
-                
-                sentinel = 0
+                value = input('Another hand? y for yes, n for no')
+                if value == 'y':
+                    self.move_button_remove_chipless_players()
+                    self.post_blinds()
+                    sentinel = 1
+                else:
+                    sentinel = 0
             # CHECK FOR END OF FINAL ROUND, SHOWDOWN RESOLUTION
             elif self.left_to_act == [] and self.round == 4:
                 # Check if sidepots are ncsry, if one or more players are all-in
@@ -356,11 +358,10 @@ class Table():
                 value = input('Another hand? y for yes, n for no')
                 self.clean_table_after_hand()
                 if value == 'y':
-                    # move button to next player with chips
-                    # remove players with no chips
-                    # repop left_to_act
+                    self.move_button_remove_chipless_players()
+                    self.post_blinds()
                     sentinel = 1
-                else:
+                else: # exit program
                     sentinel = 0
 ###################### END SHOWDOWN RESOLUTION ###########
 
@@ -385,6 +386,19 @@ class Table():
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
                 #### CONTINUE LOOP ####
+
+
+    # rotates seating position so that dealer button is on next player with chips
+    # (skips players who have just been reduced to zero stack, so as not to skip player's chance at dealer position)
+    # Rebuilds self.seat_order with players that have > 0 stack remaining
+    # Maintains previous seating order
+    def move_button_remove_chipless_players(self):
+        new_seats = []
+        for plyr in self.seat_order[1:] + self.seat_order[0:1]:
+            if self.plyr_dict[plyr].stack > 0:
+                new_seats.append(plyr)
+        return new_seats
+        
 
     def showdown(self, pot_and_player_tuple):
         # Get highest hand_rank
