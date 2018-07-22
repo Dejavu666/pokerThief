@@ -16,26 +16,22 @@
 
 # TO DO 
 
-# Fix input hint of 4player, utg raises, call, call, BB's raise minimum is too low, amounts are correct
-# not just bb raise min, reraise min is too low
+# If player runs out of chips remove from seat_order/in_hand AFTER hand is resolved
 
 # take away illegal options, raise/bet with only enough chips to call
-# Change first call of post_blinds() to inside play_hand_loop(), remove from showdown/resolution
+# Change first call of post_blinds() to inside play_hand_loop(), remove from showdown/resolution, maybe?
 # Test create_sidepots() with edge cases
+# fix remainder chips in showdown()
+# some tie_break lens are 3, is this correct?
+# division is changing ints to floats in player.stack or table.pot
+
+# Could use entire decision path of winning hand as positively labeled data point
+# Use losing paths as negatively labeled data points
+
 # Should be provably correct with input validation
 # Current command line parameter 'hints' become input validation
 # (only range of hints is presented as possible input through sliders/buttons, no typed/entered input)
 # This means the range of input is known and testable
-# Start thinking about how to extract data points
-# could I use omniscient perspective for learning? (knowledge of all hole cards)
-# division is changing ints to floats in player.stack or table.pot
-# fix remainder chips in showdown()
-# some tie_break lens are 3, is this correct?
-
-# add showdown()
-# have showdown() take one pot with eligible players, so when multiple 'pots with eligible players' are created
-# with create_sidepots(), each is resolved with a separate showdown() call
-# how to end, prompt for next hand? How does that interface with GUI?
 
 import player, deck, hands
 from random import shuffle
@@ -69,6 +65,12 @@ class Table():
         self.in_hand = []
         self.cost_to_play = 0
         
+    def deal_hole_cards(self):
+        for p in self.seat_order:
+            self.plyr_dict[p].draw_card(self.deck.draw_card())
+        for p in self.seat_order:
+            self.plyr_dict[p].draw_card(self.deck.draw_card())
+    
     # ?maybe account for division of odd numbers / split chips?
     def post_blinds(self):
         if len(self.seat_order) == 2:
@@ -229,14 +231,14 @@ class Table():
         # COULD be illegal (shouldnt be as of writing this)
         assert(self.pot+players_chips==begin_chips)
 ################# END TESTS ############
-        # deal hole cards to players
-        for p in self.seat_order:
-            self.plyr_dict[p].draw_card(self.deck.draw_card())
-        for p in self.seat_order:
-            self.plyr_dict[p].draw_card(self.deck.draw_card())
 ################# BEGIN LOOP #################
         sentinel = 1
+        new_hand = 1
         while(sentinel):
+            if new_hand:
+                self.deal_hole_cards()
+                self.post_blinds()
+                new_hand = 0
             plyr_str = self.left_to_act[0]
             # Skip player input if player is all-in (player 'checks')
             if self.plyr_dict[plyr_str].stack == 0:
@@ -364,17 +366,16 @@ class Table():
                     pot_and_plyrs = (self.pot, self.in_hand[:])
                     self.showdown(pot_and_plyrs)
                 # Showdowns complete, players rewarded
-                # prompt whether to end loop or not
+                # Prompt whether to end loop or not
                 value = input('Another hand? y for yes, n for no')
                 self.clean_table_after_hand()
                 if value == 'y':
                     self.move_button_remove_chipless_players()
-                    self.post_blinds()
+                    new_hand = 1
                     sentinel = 1
                 else: # exit program
                     sentinel = 0
 ###################### END SHOWDOWN RESOLUTION ###########
-
 ###################### OTHERWISE ADVANCE TO NEXT ROUND ###########
             elif len(self.left_to_act) == 0:
                 if self.round == 1:# preflop to flop, deal 3 com_cards
@@ -393,6 +394,7 @@ class Table():
                 # reset players chips this round, BUT NOT chips_in_pot
                 for plyr in self.seat_order:
                     self.plyr_dict[plyr].chips_this_round = 0
+                    # Reset left_to_act
                     if plyr in self.in_hand:
                         self.left_to_act.append(plyr)
                 #### CONTINUE LOOP ####
@@ -457,7 +459,6 @@ class Table():
 table = Table(4,200,20)
 for p in table.seat_order:
     table.plyr_dict[p].human = 1
-table.post_blinds()
 table.play_hand_loop()
 
 
