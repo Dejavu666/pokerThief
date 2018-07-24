@@ -1,0 +1,19 @@
+# features:
+#  - cost_to_play
+#  - min_bet
+#  - big_blind
+#  - seat_order
+#  - num_players
+#  - pot
+#  - player_dictionary, for each player (can be thought of as playerXplayer_attribute matrix)
+#  - each player is just a series of the following values
+#    - stack
+#    - start_stack or begin_chips whatever it's called
+#    - chips_this_round
+#    - chips_in_pot
+#    - hole_cards (cards have to be converted to some normalized? value, not normalized but...)
+#    - relative values of the cards are important, relative rank, but not in all scenarios,
+#    - if i just convert them to unique integers, will things like suit and value of draws be accounted for???
+# So the entire state, list of values, is appended by the current action raise/bet/fold/call (one-hot-encoding?)
+# A series of these objects from a starting hand to a win is a positively labeled data point
+# A series of these objects from a starting hand to a loss is a negatively labeled data point
