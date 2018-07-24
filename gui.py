@@ -18,7 +18,24 @@
 #   -if no return from 'one-remain-player' or 'showdown', advance round 
 
 
-# http://effbot.org/tkinterbook/frame.htm
+# Old gui uses root tk object with multiple frames dividing screen as children of root
+# change to just dispatch actions from gui instead of so much logic
+# currently, the player_window frame calls populate() on itself which presents legal player actions
+# any of these actions call nextPlayer() which updates some info and calls populate() again to replenish the
+# window with the next player information
+# The above should be changed so that the first populate()(heretofore, get_action()(to be called after post_blinds() at the begin of a new hand, is a signal sent to table object
+# table object should rotate to active player position (first player in left_to_act, table skips all-in players)
+# and return a signal to present either bot-thinking or player-option window (returned with the player-option
+# are the legal player actions and parameters, bot-window returns chosen bot action
+
+# ... how to resolve end of hand checks...can put either at end of applied actions (bet/call/check)
+# OR at the begin of populate()?...
+
+# either bot-window.after(), or player input sends signal back to table of action to apply
+# table applies action to itself...
+
+# tkinter reference
+# http://effbot.org/tkinterbook/
 # https://docs.python.org/3/library/tkinter.html#a-simple-hello-world-program
 
 
@@ -33,16 +50,19 @@ for p in table.seat_order:
 table.post_blinds()
 
 
-root = tkinter.Frame(None, relief=RIDGE, borderwidth=2,width=1768, height=1576)
-root.pack(fill='both',expand=1)
+root = tkinter.Tk()
+root.geometry('1025x725')
 
-title_label = tkinter.Label(root,text='PokerMage')
+frame = tkinter.Frame(None, relief=RIDGE, borderwidth=2,width=1768, height=1576)
+frame.pack(fill='both',expand=1)
+
+title_label = tkinter.Label(frame,text='PokerMage')
 title_label.pack(fill=X, expand=1)
 
-pot_label = tkinter.Label(root, text=str(table.pot))
+pot_label = tkinter.Label(frame, text=str(table.pot))
 pot_label.pack(fill=X, expand=1)
 
-button = tkinter.Button(root, text='start game',command=table.play_hand_loop)
+button = tkinter.Button(frame, text='start game',command=table.play_hand_loop)
 button.pack(side=BOTTOM)
 
 root.mainloop()
@@ -59,163 +79,10 @@ root.mainloop()
 # OLD GUI, too much tied to underlying layers
 # should dispatch actions from gui, but all the logic should be in underlying object
 
-'''
-bot branch test text
-BUGS!
-last hand?
-  File "currentPoker.py", line 379, in call
-    self.endRound()
-  File "currentPoker.py", line 464, in endRound
-    room.playerWindow.populate()
-  File "currentPoker.py", line 352, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 415, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 439, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 334, in populate
-    self.endRound()
-  File "currentPoker.py", line 467, in endRound
-    room.playerWindow.populate()
-  File "currentPoker.py", line 352, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 415, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 439, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 339, in populate
-    plyr = room.table.leftToAct[0]
-ALSO!
-that thing jessica found...something with sidepots/showdown...
-File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 398, in endRound
-    winners = self.showdown()
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 250, in showdown
-    return self.createSidePots()
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 279, in createSidePots
-    lowstack,lowman = self.findLowStack(self.inHand[:])
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 318, in findLowStack
-    lowstack = self.playerDict[players[0]].startStack
-IndexError: list index out of range
-ALSO THIS!
-le "/Users/crazyfox/anaconda2/lib/python2.7/lib-tk/Tkinter.py", line 1541, in __call__
-    return self.func(*args)
-  File "currentPoker.py", line 181, in <lambda>
-    self.b1 = tk.Button(self,text='Call '+str(min(room.table.playerDict[plyr].stackSize,room.table.costToPlay-room.table.playerDict[plyr].inFront)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
-  File "currentPoker.py", line 258, in call
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 233, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 296, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 238, in populate
-    self.call(plyr)
-  File "currentPoker.py", line 258, in call
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 238, in populate
-    self.call(plyr)
-  File "currentPoker.py", line 258, in call
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 215, in populate
-    self.endRound()
-  File "currentPoker.py", line 341, in endRound
-    room.playerWindow.populate()
-  File "currentPoker.py", line 233, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 296, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 215, in populate
-    self.endRound()
-  File "currentPoker.py", line 344, in endRound
-    room.playerWindow.populate()
-  File "currentPoker.py", line 233, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 296, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 215, in populate
-    self.endRound()
-  File "currentPoker.py", line 347, in endRound
-    room.playerWindow.populate()
-  File "currentPoker.py", line 233, in populate
-    self.bet(plyr,maybeAmount)
-  File "currentPoker.py", line 296, in bet
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 218, in populate
-    self.nextPlayer()
-  File "currentPoker.py", line 320, in nextPlayer
-    self.populate()
-  File "currentPoker.py", line 215, in populate
-    self.endRound()
-  File "currentPoker.py", line 332, in endRound
-    winners = room.table.endRound()
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 398, in endRound
-    winners = self.showdown()
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 250, in showdown
-    return self.createSidePots()
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 297, in createSidePots
-    winners = self.bestHandAmong(eligTmp[counter])
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/table.py", line 339, in bestHandAmong
-    tmpPlayers = hands.tieBreak(tmpPlayers,self.playerDict)
-  File "/Users/crazyfox/Desktop/githubProjects/branchpokerThief/pokerThief/hands.py", line 119, in tieBreak
-    if playerDict[plr].tieBreak[0] > highVal:
-IndexError: list index out of range
-ALSO THIS!
-File "currentPoker.py", line 347, in endRound
-    else:
-  File "currentPoker.py", line 220, in populate
-    room.table.moveButton()
-IndexError: list index out of range
-'''
-
 import Tkinter as tk
 import sys, deck, player, table
 from PIL import Image, ImageTk
-from time import sleep
-#### NEED TO:
-### make default of only one human against the remainder of players as bots
-### player1 as human
 
-# deleting back of cards/hole cards in tableWindow in multi-winner showdown
-# only one player with action, skip to end of hand
-# deal with multiple screen sizes
-# endRound in gui should put "folded around to player/reward last player logic" into underlying table class and out of gui
 
 # NICE TO HAVE
 # fit window and children to various screen-size
@@ -485,6 +352,7 @@ class PlayerWindow(tk.Frame):
             self.endRound()
         
         
+        # remove this, and other logic from gui
     # nextPlayer is only called when leftToAct has at least one remaining player
     def nextPlayer(self):
         # check if folded around to last player, regardless of last player all-in status
