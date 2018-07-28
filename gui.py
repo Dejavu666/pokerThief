@@ -42,11 +42,92 @@
 
 import table
 import tkinter as tk
+from PIL import Image, ImageTk
 
 
 class Player_window(tk.Frame):
     pass
 class Left_panel_buttons(tk.Frame):
+    # creates buttons 
+    def __init__(self,parent):
+        tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
+        self.lpbg = Image.open('res/leftPanelbg.gif')
+        self.img_copy= self.lpbg.copy()
+        self.bgimg = ImageTk.PhotoImage(self.lpbg)
+        self.bg = tk.Label(self,image=self.bgimg)
+        self.bg.bind('<Configure>', self._resize_image)
+        self.bg.pack(fill=tk.BOTH, expand=tk.YES)
+        
+        # Press to move dealer button, eliminates any busted players
+        self.moveButton = tk.Button(self.bg,takefocus=1, text='Move Button',highlightbackground='darkred',command=self.moveButton)
+        self.moveButton.pack()
+        
+        # Press to deal 2 cards to all players
+        self.deal = tk.Button(self.bg,takefocus=1, text='Deal Cards',highlightbackground='darkred',command=self.dealCards)
+        self.deal.pack()
+        
+        # Press to post blinds
+        self.pstBlnds = tk.Button(self.bg,takefocus=1, text='Post Blinds',highlightbackground='darkred',command=self.postBlinds)
+        self.pstBlnds.pack()
+        
+        # Press to start hand, get first action from player
+        self.gtActn = tk.Button(self.bg,takefocus=1,text='Get Action',highlightbackground='darkred',command=self.getAction)
+        self.gtActn.pack()
+        
+        # Press to reveal all hands
+        self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.showHands)
+        self.shwHands.pack()
+        
+        # Press to reset everything, should happen between hands
+        self.clnUp = tk.Button(self.bg,text='Clean',highlightbackground='darkred',command=self.cleanUp)
+        self.clnUp.pack()
+        
+    # move dealer button and eliminate busted players, called by self.moveButton button
+    def moveButton(self):
+        room.table.moveButton()
+        room.imageList[room.table.playerOrder[-1]].dealerButton.configure(text='')
+        room.imageList[room.table.playerOrder[0]].dealerButton.configure(text='Dealer')
+        for plyr in room.table.playerOrder[:]:
+            if room.table.playerDict[plyr].stackSize == 0:
+                room.tableWindow.deletePlayer(plyr)
+                
+    # deals 2 cards to all players, called by self.deal button
+    def dealCards(self):
+        room.table.dealCards()
+        for plyr in room.table.playerOrder:
+            room.imageList[plyr].c1.configure(image=room.cardBack)
+            room.imageList[plyr].c2.configure(image=room.cardBack)
+                
+    # post blinds, called by self.pstBlinds button
+    def postBlinds(self):
+        room.table.postBlinds()
+        room.tableWindow.updateTableChips()
+        
+    # calls populate() to get the first action, called by self.gtActn button
+    def getAction(self):
+        room.playerWindow.populate()
+        
+    # reveal each player's hand, called by self.shwHands button
+    def showHands(self,event=None):
+        for plyr in room.table.playerOrder:
+            if room.table.playerDict[plyr].hand != []:
+                room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[0]+'.gif'))
+                room.imageList[plyr].c1.configure(image=room.imageList[plyr].img1)
+                room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[1]+'.gif'))
+                room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
+            
+    # reset, called by self.clnUp button
+    def cleanUp(self):
+        room.tableWindow.clean()
+        
+    # resize background image on window resize
+    def _resize_image(self,event):
+        new_width = event.width # event.width is new window width
+        new_height = event.height # event.height is new window height
+        self.image = self.img_copy.resize((new_width, new_height)) # image becomes same size as window
+        self.bgImg = ImageTk.PhotoImage(self.image) # change to ImageTk
+        self.bg.configure(image = self.bgImg) 
+            
     pass
 class Start_game_bar(tk.Frame):
     pass
@@ -59,7 +140,7 @@ class Main_application(tk.Frame):
         tk.Frame.__init__(self, parent)
         # 4 child widgets
         self.player_window = Player_window()
-        self.left_panel_buttons = Left_panel_buttons()
+        self.left_panel_buttons = Left_panel_buttons(self)
         self.start_game_bar = Start_game_bar()
         self.table_window = Table_window()
         # geometry packer

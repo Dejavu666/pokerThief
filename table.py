@@ -218,23 +218,13 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
-    # Play-Hand Looping Function
+
+    def get_action(self):
+        player = self.left_to_act[0]
+
+    # working here, remove play_hand_loop() for gui, replace with get_action() which returns action of active player
+    # table object should be able to just call bet/raise/call/check/fold with appr player
     def play_hand_loop(self):
-################# SOME TESTS #################
-        players_chips = 0
-        for p in self.seat_order:
-            players_chips += self.plyr_dict[p].stack
-        begin_chips = self.num_chips*self.num_players
-        # Check that chips are always subtracted and added at the same rate (total number of chips is same)
-        # Does not ncsrly mean that they are added and subtracted appropriately, only correctly
-        # For example: a raise may subtract an amount equal to the amount added to pot, but the raise amounts
-        # COULD be illegal (shouldnt be as of writing this)
-        assert(self.pot+players_chips==begin_chips)
-################# END TESTS ############
-################# BEGIN LOOP #################
-        sentinel = 1
-        new_hand = 1
-        while(sentinel):
             if new_hand:
                 self.deal_hole_cards()
                 self.post_blinds()
@@ -242,22 +232,10 @@ class Table():
             plyr_str = self.left_to_act[0]
             # Skip player input if player is all-in (player 'checks')
             if self.plyr_dict[plyr_str].stack == 0:
-                act = 'c'
+                act = 'check'
             # Otherwise, prompt the player for input
             elif self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
-                #### Print Console Info, temp until GUI
-                print(plyr_str)
-                print('players left to act this round == ', self.left_to_act)
-                print('players still in the hand == ' , self.in_hand)
-                print('round is ', self.round)
-                print('community cards == ', self.com_cards)
-                print('your hole cards == ', self.plyr_dict[plyr_str].hand)
-                print('your stack == ', self.plyr_dict[plyr_str].stack)
-                print('your chips this round == ', self.plyr_dict[plyr_str].chips_this_round)
-                print('your chips in the pot == ', self.plyr_dict[plyr_str].chips_in_pot)
-                print('the pot == ', self.pot)
-                print('cost_to_play == ', self.cost_to_play)
-                print('cost to you is ', self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round)
+
 ################ Begin Input Logic, constraints become input validation in GUI
                 # IF ONLY 2 PLAYERS:
                 if len(self.seat_order) == 2:
@@ -409,7 +387,7 @@ class Table():
         for plyr in self.seat_order[1:] + self.seat_order[0:1]:
             if self.plyr_dict[plyr].stack > 0:
                 new_seats.append(plyr)
-        return new_seats
+        self.seat_order = new_seats[:]
         
 
     def showdown(self, pot_and_player_tuple):
@@ -438,43 +416,3 @@ class Table():
             for p in winners:
                 self.plyr_dict[p].stack += amount
                 print(p+' wins DEBUG '+str(pot))
-
-
-####### TEST #######
-# dependencies = num_players, num_chips, big_blind
-# test_params = [[2,10,20],[3,100,20],[3,10,20]]
-# for param in test_params:
-#     table = Table(param[0],param[1],param[2])
-# 
-#     print(table.plyr_dict)
-#     print(table.seat_order)
-#     table.post_blinds()
-#     for k in table.plyr_dict.keys():
-#         print(table.plyr_dict[k].stack)
-#     print(table.pot)
-
-# TESTS for table.create_sidepots
-# create mock data with AT LEAST one player all-in/in-hand
-
-# table = Table(4,200,20)
-# for p in table.seat_order:
-#     table.plyr_dict[p].human = 1
-# table.play_hand_loop()
-
-
-
-# table.com_cards.append(table.deck.draw_card())
-# table.com_cards.append(table.deck.draw_card())
-# table.com_cards.append(table.deck.draw_card())
-# table.com_cards.append(table.deck.draw_card())
-# table.com_cards.append(table.deck.draw_card())
-# # set all players to human
-# for p in table.seat_order:
-#     table.plyr_dict[p].human = 1
-#     table.plyr_dict[p].hand.append(table.deck.draw_card())
-#     table.plyr_dict[p].hand.append(table.deck.draw_card())
-#     hands.assign_hand_rank(p, table)
-#     print(table.plyr_dict[p].hand+table.com_cards)
-#     print(table.plyr_dict[p].hand_rank)
-#     print(table.plyr_dict[p].tie_break)
-
