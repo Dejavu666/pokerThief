@@ -46,7 +46,170 @@ from PIL import Image, ImageTk
 
 
 class Player_window(tk.Frame):
-    pass
+    def __init__(self,parent):
+        tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
+        tmpImage = Image.open('res/placeholder.gif').resize((130,130))
+        self.playerImage = ImageTk.PhotoImage(tmpImage)
+        self.playerImg = tk.Label(self,image=self.playerImage,bg='black')
+        self.playerImg.pack(side='left')
+        self.plyrMsg = tk.Label(self,text='Welcome to Poker',bg='black',fg='wheat3')
+        self.plyrMsg.pack()
+        self.card1 = tk.Label(self,image=None,bg='black')
+        self.card1.pack(side='left')
+        self.card2 = tk.Label(self,image=None,bg='black')
+        self.card2.pack(side='left')
+        
+    # dispatch self.check(),self.bet(),self.fold()
+    def createCheckButtons(self,plyr):
+        self.b1 =  tk.Button(self,text='Check',highlightbackground='black',font=('Helvetica',16),command=lambda:self.check(plyr))
+        self.b1.pack(side='left')
+        self.b2 = tk.Button(self,text='Bet',highlightbackground='black',font=('Helvetica',16),command=lambda:self.bet(plyr))
+        self.b2.pack(side='left')
+        self.wagerEntry = tk.Scale(self,from_=min(room.table.playerDict[plyr].stackSize,room.table.minBet),to=room.table.playerDict[plyr].stackSize,orient='horizontal',resolution=10,bg='black',fg='wheat3')
+        self.wagerEntry.pack(side='left')
+        self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
+        self.b3.pack(side='left')
+        
+    # dispatch self.call(),self.Raise(),self.fold()
+    def createCallButtons(self,plyr):
+        self.b1 = tk.Button(self,text='Call '+str(min(room.table.playerDict[plyr].stackSize,room.table.costToPlay-room.table.playerDict[plyr].inFront)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
+        self.b1.pack(side='left')
+        # player cannot raise if only enough to call, do not create the button
+        if room.table.playerDict[plyr].stackSize > room.table.costToPlay-room.table.playerDict[plyr].inFront:
+            self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
+            self.b2.pack(side='left')
+            self.wagerEntry = tk.Scale(self,from_=min(room.table.playerDict[plyr].stackSize-room.table.costToPlay+room.table.playerDict[plyr].inFront,room.table.minBet),to=min(room.table.playerDict[plyr].stackSize,room.table.playerDict[plyr].stackSize-room.table.costToPlay+room.table.playerDict[plyr].inFront),orient='horizontal',resolution=10,bg='black',fg='wheat3')
+            self.wagerEntry.pack(side='left')
+        self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
+        self.b3.pack(side='left')
+        
+    def createCurrentPlayerImage(self,plyr):
+        self.plyrMsg.configure(text='What will '+plyr+' do?')
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[0]+'.gif'))
+        self.card1.configure(image=self.cardimg1)
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[1]+'.gif'))
+        self.card2.configure(image=self.cardimg2)
+        
+    def createBotPlayerImage(self,plyr):
+        self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
+        # WORKING HERE
+        self.card1.configure(image=room.cardBack)
+        self.card2.configure(image=room.cardBack)
+
+# this populates the player area with current player info
+    def populate(self):
+        # skip player if all-in
+        # WORKING HERE list index out of range error
+        print(room.table.playerDict, ' is playerDict')
+        print(room.table.leftToAct, ' is leftToAct')
+        if room.table.leftToAct != []:
+            if room.table.playerDict[room.table.leftToAct[0]].stackSize == 0:
+                room.table.leftToAct.remove(room.table.leftToAct[0])
+                if room.table.leftToAct == []:
+                    self.endRound()
+                else:
+                    # memory leak? nextPlayer calls populate until?
+                    self.nextPlayer()
+        # end skip player if all in
+        plyr = room.table.leftToAct[0]
+        # WORKING
+        # IF PLAYER IS BOT
+        if room.table.playerDict[plyr].human == 0:
+            self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
+            self.createBotPlayerImage(plyr)
+            # If pot is open
+            if room.table.playerDict[plyr].inFront == room.table.costToPlay:
+                # do i need to pass the table object or can i refer to it from bot/player instance?
+                botAction, maybeAmount = room.table.playerDict[plyr].getRandomCheckAction(plyr,room.table)
+                if botAction == 'check':
+                    self.check(plyr)
+                else:
+                    self.bet(plyr,maybeAmount)
+            # pot is not open
+            else:
+                botAction, maybeAmount = room.table.playerDict[plyr].getRandomCallAction(plyr,room.table)
+                if botAction == 'call':
+                    self.call(plyr)
+                elif botAction == 'raise':
+                    self.Raise(plyr,maybeAmount)
+                else:
+                    self.fold(plyr)
+        else:# actions for human user
+            self.createCurrentPlayerImage(plyr)
+            if room.table.playerDict[plyr].inFront == room.table.costToPlay:
+                self.createCheckButtons(plyr)
+            else:
+                self.createCallButtons(plyr)
+        
+    # these call underlying table methods
+    # then nextPlayer()|endRound()
+    
+    def call(self,currentPlyr):
+        room.table.call(currentPlyr)
+        room.tableWindow.updateTableChips()
+        self.destroyButtons()
+        if room.table.leftToAct != []:
+            self.nextPlayer()
+        else:
+            self.endRound()
+        
+    # note Raise instead of raise
+    def Raise(self,currentPlyr,amount=0):
+        try:
+            amount = self.wagerEntry.get()
+        except:
+            pass
+        room.table.Raise(currentPlyr,amount)
+        room.tableWindow.updateTableChips()
+        self.destroyButtons()
+        if room.table.leftToAct != []:
+            self.nextPlayer()
+        else:
+            self.endRound()
+        
+    def fold(self,currentPlyr):
+        room.table.fold(currentPlyr)
+        room.tableWindow.updateTableChips()
+        room.imageList[currentPlyr].c1.configure(image=room.noCard)
+        room.imageList[currentPlyr].c2.configure(image=room.noCard)
+        self.destroyButtons()
+        if room.table.leftToAct != []:
+            self.nextPlayer()
+        else:
+            self.endRound()
+        
+    def bet(self,currentPlyr,amount=0):
+        try:
+            amount = self.wagerEntry.get()
+        except:
+            pass
+        room.table.bet(currentPlyr,amount)
+        room.tableWindow.updateTableChips()
+        self.destroyButtons()
+        if room.table.leftToAct != []:
+            self.nextPlayer()
+        else:
+            self.endRound()
+    
+    def check(self,currentPlyr):
+        room.table.check(currentPlyr)
+        room.tableWindow.updateTableChips()
+        self.destroyButtons()
+        if room.table.leftToAct != []:
+            self.nextPlayer()
+        else:
+            self.endRound()
+            
+#     def destroyButtons(self):
+#         try:
+#             self.b1.destroy()
+#             self.b2.destroy()
+#             self.b3.destroy()
+#             self.wagerEntry.destroy()
+#             self.card1.configure(image=None)
+#             self.card2.configure(image=None)
+#         except:
+#             pass
     
     
 class Left_panel_buttons(tk.Frame):
@@ -77,12 +240,12 @@ class Left_panel_buttons(tk.Frame):
         self.gtActn.pack()
         
         # Press to reveal all hands
-        self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.showHands)
-        self.shwHands.pack()
+#         self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.showHands)
+#         self.shwHands.pack()
         
         # Press to reset everything, should happen between hands
-        self.clnUp = tk.Button(self.bg,text='Clean',highlightbackground='darkred',command=self.cleanUp)
-        self.clnUp.pack()
+#         self.clnUp = tk.Button(self.bg,text='Clean',highlightbackground='darkred',command=self.cleanUp)
+#         self.clnUp.pack()
         
     # move dealer button and eliminate busted players, called by self.moveButton button
     def moveButton(self):
@@ -110,17 +273,17 @@ class Left_panel_buttons(tk.Frame):
         room.playerWindow.populate()
         
     # reveal each player's hand, called by self.shwHands button
-    def showHands(self,event=None):
-        for plyr in room.table.playerOrder:
-            if room.table.playerDict[plyr].hand != []:
-                room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[0]+'.gif'))
-                room.imageList[plyr].c1.configure(image=room.imageList[plyr].img1)
-                room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[1]+'.gif'))
-                room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
+#     def showHands(self,event=None):
+#         for plyr in room.table.playerOrder:
+#             if room.table.playerDict[plyr].hand != []:
+#                 room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[0]+'.gif'))
+#                 room.imageList[plyr].c1.configure(image=room.imageList[plyr].img1)
+#                 room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[1]+'.gif'))
+#                 room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
             
     # reset, called by self.clnUp button
-    def cleanUp(self):
-        room.tableWindow.clean()
+#     def cleanUp(self):
+#         room.tableWindow.clean()
         
     # resize background image on window resize
     def _resize_image(self,event):
@@ -141,15 +304,15 @@ class Main_application(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         # 4 child widgets
-        self.player_window = Player_window()
+        self.player_window = Player_window(self)
         self.left_panel_buttons = Left_panel_buttons(self)
         self.start_game_bar = Start_game_bar()
         self.table_window = Table_window()
         # geometry packer
         self.player_window.pack(side="bottom", fill="x")
-        self.start_game_bar.pack(side="top", fill="x")
+#         self.start_game_bar.pack(side="top", fill="x")
         self.left_panel_buttons.pack(side="left", fill="y")
-        self.table_window.pack(side="right", fill="both", expand=True)
+#         self.table_window.pack(side="right", fill="both", expand=True)
         # constant image references held in class that inherits from TK root
 #         self.cardBack = ImageTk.PhotoImage(Image.open('cardImages/cardBack.gif'))
 #         self.noCard = ImageTk.PhotoImage(Image.open('cardImages/noCard.gif'))
@@ -162,22 +325,17 @@ root.geometry('1000x700')
 room = Main_application(root)
 room.pack(fill=tk.BOTH, expand=tk.YES)
 
+# table = table.Table(4,1000,20)
+# table.post_blinds()
+
 root.mainloop()
 
 
 
 
 
-# table = table.Table(4,1000,20)
-# table.post_blinds()
-# table.play_hand_loop()
 
-# OLD GUI, too much tied to underlying layers
-# should dispatch actions from gui, but all the logic should be in underlying object
 
-import Tkinter as tk
-import sys, deck, player, table
-from PIL import Image, ImageTk
 
 
 # NICE TO HAVE
@@ -186,20 +344,7 @@ from PIL import Image, ImageTk
 # bind hotkeys to player options (check,raise,call,bet,fold), change args to event=None, operate on room.table.leftToAct[0]
 # when player(s) win, should tell what the hand is/show winning cards (the 5 of 7 used)
 
-'''
-Poker---
- startGameBar gets user input
- leftPanelButtons dispatch action
- tableWindow is visual "table area", shows community info
- playerWindow is visual "active player area" (bottom of screen), shows active player decisions
- 
- important vars == room.numberOfPlayers, room.stackSize, room.bigBlindSize
- room.table, room.table.playerOrder, room.table.playerDict, room.table.leftToAct, room.table.inHand
- room.table.costToPlay, 
- room.imageList holds frames with visual player info, list is in same order as room.table.playerOrder
- dict room.imageList['player1'].c1 is the visual representation of room.playerDict['player1'].hand[0], ie first card
-room.cardBack, room.noCard
-'''
+
 # 
 # root = tk.Tk() 
 # root.title("Poker")

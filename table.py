@@ -434,9 +434,9 @@ class Table():
 
 ############ TESTS #################
 
-table = Table(4,1000,20)
-for p in table.seat_order:
-    table.plyr_dict[p].human = 1
-table.deal_hole_cards()
-table.post_blinds()
-print(table.get_legal_actions())
+# table = Table(4,1000,20)
+# for p in table.seat_order:
+#     table.plyr_dict[p].human = 1
+# table.deal_hole_cards()
+# table.post_blinds()
+# print(table.get_legal_actions())
