@@ -47,6 +47,8 @@ from PIL import Image, ImageTk
 
 class Player_window(tk.Frame):
     pass
+    
+    
 class Left_panel_buttons(tk.Frame):
     # creates buttons 
     def __init__(self,parent):

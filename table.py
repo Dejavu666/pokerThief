@@ -218,9 +218,23 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
-
-    def get_action(self):
+    # Determine active player, legal options, return legal options range, whether human or bot
+    def get_legal_actions(self):
+        plyr = self.left_to_act[0]
+        if self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
+            acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
+                    ('check'),\
+                    ('fold'))
+        else:
+            acts = (('raise',(min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round)),\
+            ('call',(min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round))),\
+            ('fold'))
+        return acts
+        
+    # should this also take a player? or just use the state anyway
+    def apply_action(self, some_action):
         player = self.left_to_act[0]
+        
 
     # working here, remove play_hand_loop() for gui, replace with get_action() which returns action of active player
     # table object should be able to just call bet/raise/call/check/fold with appr player
@@ -416,3 +430,13 @@ class Table():
             for p in winners:
                 self.plyr_dict[p].stack += amount
                 print(p+' wins DEBUG '+str(pot))
+
+
+############ TESTS #################
+
+table = Table(4,1000,20)
+for p in table.seat_order:
+    table.plyr_dict[p].human = 1
+table.deal_hole_cards()
+table.post_blinds()
+print(table.get_legal_actions())
