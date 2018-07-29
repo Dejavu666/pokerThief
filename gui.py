@@ -459,6 +459,65 @@ class Table_window(tk.Frame):
         self.background_image = ImageTk.PhotoImage(self.image) # change to ImageTk
         self.background.configure(image =  self.background_image) 
 
+class QuitGamePopup(object):
+    def __init__(self,parent):
+        self.top = tk.Toplevel(parent,bg='black',relief='ridge',bd=4)
+        self.top.minsize(420,120)
+        self.top.maxsize(420,120)
+        self.players = tk.Label(self.top,text="Would You Like To Quit?",fg='burlywood1',bg='black',font=("Courier bold", 28))
+        self.players.pack()
+        self.yes = tk.Button(self.top,text='Yes',takefocus=1,font=("Gothic", 16),highlightbackground='black',command=self.getMeOutOfHere)
+        self.yes.pack()
+        self.no = tk.Button(self.top,takefocus=1,text="No, don't quit",font=("Gothic", 16),highlightbackground='black', command=self.top.destroy)
+        self.no.pack()
+        
+    def getMeOutOfHere(self):
+        self.top.destroy()
+        sys.exit()
+
+# gets input from user numPlayers,stackSize,bigBlind 
+# stored as room.numberOfPlayers,room.stackSize,room.bigBlindSize
+class StartGamePopup(object):
+    def __init__(self,root):
+        self.top = tk.Toplevel(root,bg='black',relief='ridge',bd=4)
+        self.top.geometry('700x330')
+        self.top.grab_set()
+        self.players = tk.Label(self.top,bg='black',fg='burlywood1',text="How Many players?\n2-9",font=('Courier bold',26))
+        self.players.pack()
+        self.playersEntry = tk.Scale(self.top,relief='raised',from_=2,to=9,orient='horizontal')
+        self.playersEntry.pack()
+        self.stackSize = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
+        self.stackSize.pack()
+        self.stackSizeEntry = tk.Entry(self.top,relief='raised')
+        self.stackSizeEntry.pack() 
+        self.bigBlind = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the big blind value?\nIncrements of 20,\n at most, ten percent of stack size",font=('Courier bold',26))
+        self.bigBlind.pack()
+        self.bigBlindEntry = tk.Entry(self.top,relief='raised')
+        self.bigBlindEntry.pack()
+        self.b=tk.Button(self.top,relief='raised',text='Ok',fg='blue2',font=("Helvetica bold italic",26)\
+       ,takefocus=1,command=self.verify)
+        self.b.pack()
+    
+    # verify that number of players, starting stack and blinds are valid values
+    def verify(self):
+        room.numberOfPlayers = self.playersEntry.get()
+        room.stackSize = self.stackSizeEntry.get()
+        room.bigBlindSize = self.bigBlindEntry.get()
+        try:
+            room.numberOfPlayers = int(room.numberOfPlayers)
+            if room.numberOfPlayers < 2 or room.numberOfPlayers > 9:
+                raise
+            room.stackSize = int(room.stackSize)
+            if room.stackSize % 10 != 0 or room.stackSize < 100:
+                raise
+            room.bigBlindSize = int(room.bigBlindSize)
+            if room.bigBlindSize % 20 != 0 or room.stackSize/10 < room.bigBlindSize:
+                raise
+            self.top.destroy()
+        except:
+            pass
+        room.startGameBar.seatPlayerButton.configure(state='normal')
+
 # just a geometry organizer for other classes
 class Main_application(tk.Frame):
     def __init__(self, parent):
@@ -717,63 +776,3 @@ root.mainloop()
 #             pots -= pots/len(plyrs)
 #             plyrs = plyrs[1:]
 #             self.after(2300,self.showSidepotWinners,pots,plyrs)
-#         
-
-# # gets input from user numPlayers,stackSize,bigBlind 
-# # stored as room.numberOfPlayers,room.stackSize,room.bigBlindSize
-# class StartGamePopup(object):
-#     def __init__(self,root):
-#         self.top = tk.Toplevel(root,bg='black',relief='ridge',bd=4)
-#         self.top.geometry('700x330')
-#         self.top.grab_set()
-#         self.players = tk.Label(self.top,bg='black',fg='burlywood1',text="How Many players?\n2-9",font=('Courier bold',26))
-#         self.players.pack()
-#         self.playersEntry = tk.Entry(self.top,relief='raised')
-#         self.playersEntry.pack()
-#         self.stackSize = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
-#         self.stackSize.pack()
-#         self.stackSizeEntry = tk.Entry(self.top,relief='raised')
-#         self.stackSizeEntry.pack() 
-#         self.bigBlind = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the big blind value?\nIncrements of 20,\n at most, ten percent of stack size",font=('Courier bold',26))
-#         self.bigBlind.pack()
-#         self.bigBlindEntry = tk.Entry(self.top,relief='raised')
-#         self.bigBlindEntry.pack()
-#         self.b=tk.Button(self.top,relief='raised',text='Ok',fg='blue2',font=("Helvetica bold italic",26)\
-#        ,takefocus=1,command=self.verify)
-#         self.b.pack()
-#     
-#     # verify that number of players, starting stack and blinds are valid values
-#     def verify(self):
-#         room.numberOfPlayers = self.playersEntry.get()
-#         room.stackSize = self.stackSizeEntry.get()
-#         room.bigBlindSize = self.bigBlindEntry.get()
-#         try:
-#             room.numberOfPlayers = int(room.numberOfPlayers)
-#             if room.numberOfPlayers < 2 or room.numberOfPlayers > 9:
-#                 raise
-#             room.stackSize = int(room.stackSize)
-#             if room.stackSize % 10 != 0 or room.stackSize < 100:
-#                 raise
-#             room.bigBlindSize = int(room.bigBlindSize)
-#             if room.bigBlindSize % 20 != 0 or room.stackSize/10 < room.bigBlindSize:
-#                 raise
-#             self.top.destroy()
-#         except:
-#             pass
-#         room.startGameBar.seatPlayerButton.configure(state='normal')
-#         
-# class QuitGamePopup(object):
-#     def __init__(self,parent):
-#         self.top = tk.Toplevel(parent,bg='black',relief='ridge',bd=4)
-#         self.top.minsize(420,120)
-#         self.top.maxsize(420,120)
-#         self.players = tk.Label(self.top,text="Would You Like To Quit?",fg='burlywood1',bg='black',font=("Courier bold", 28))
-#         self.players.pack()
-#         self.yes = tk.Button(self.top,text='Yes',takefocus=1,font=("Gothic", 16),highlightbackground='black',command=self.getMeOutOfHere)
-#         self.yes.pack()
-#         self.no = tk.Button(self.top,takefocus=1,text="No, don't quit",font=("Gothic", 16),highlightbackground='black', command=self.top.destroy)
-#         self.no.pack()
-#         
-#     def getMeOutOfHere(self):
-#         self.top.destroy()
-#         sys.exit()
