@@ -475,26 +475,27 @@ class QuitGamePopup(object):
         self.top.destroy()
         sys.exit()
 
+# still need to round down to closest factor of 20
 # gets input from user numPlayers,stackSize,bigBlind 
 # stored as room.numberOfPlayers,room.stackSize,room.bigBlindSize
 class StartGamePopup(object):
     def __init__(self,root):
         self.top = tk.Toplevel(root,bg='black',relief='ridge',bd=4)
-        self.top.geometry('700x330')
+        self.top.geometry('700x360')
         self.top.grab_set()
-        self.players = tk.Label(self.top,bg='black',fg='burlywood1',text="How Many players?\n2-9",font=('Courier bold',26))
+        self.players = tk.Label(self.top,bg='black',fg='maroon',text="How Many players?\n2-9",font=('Courier bold',26))
         self.players.pack()
-        self.playersEntry = tk.Scale(self.top,relief='raised',from_=2,to=9,orient='horizontal')
+        self.playersEntry = tk.Scale(self.top,relief='raised',from_=2,to=9,orient='horizontal',bg='black',fg='red')
         self.playersEntry.pack()
-        self.stackSize = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
+        self.stackSize = tk.Label(self.top,bg='black',fg='maroon',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
         self.stackSize.pack()
-        self.stackSizeEntry = tk.Entry(self.top,relief='raised')
+        self.stackSizeEntry = tk.Scale(self.top,relief='raised',from_=200,to=10000,length=300,orient='horizontal',bg='black',fg='red',resolution=10,command=lambda x: self.bigBlindEntry.config(to=(self.stackSizeEntry.get()//10)))#need to round down to factor20 here
         self.stackSizeEntry.pack() 
-        self.bigBlind = tk.Label(self.top,bg='black',fg='burlywood1',text="What is the big blind value?\nIncrements of 20,\n at most, ten percent of stack size",font=('Courier bold',26))
+        self.bigBlind = tk.Label(self.top,bg='black',fg='maroon',text="What is the big blind value?\nIncrements of 20,\n at most, ten percent of stack size",font=('Courier bold',26))
         self.bigBlind.pack()
-        self.bigBlindEntry = tk.Entry(self.top,relief='raised')
+        self.bigBlindEntry = tk.Scale(self.top,relief='raised',from_=20,to=self.stackSizeEntry.get(),resolution=20,orient='horizontal',fg='red',bg='black')
         self.bigBlindEntry.pack()
-        self.b=tk.Button(self.top,relief='raised',text='Ok',fg='blue2',font=("Helvetica bold italic",26)\
+        self.b=tk.Button(self.top,bg='black',highlightbackground='maroon',relief='raised',text='Ok',fg='maroon',font=("Helvetica bold italic",26)\
        ,takefocus=1,command=self.verify)
         self.b.pack()
     
