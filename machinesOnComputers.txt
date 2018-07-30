@@ -17,3 +17,8 @@
 # So the entire state, list of values, is appended by the current action raise/bet/fold/call (one-hot-encoding?)
 # A series of these objects from a starting hand to a win is a positively labeled data point
 # A series of these objects from a starting hand to a loss is a negatively labeled data point
+
+# Doesnt really make sense
+# The point where a decision is needed is between states of the table (an incomplete path like above)
+# Maybe take table states where a decision is made that leads to a win, so similar table states would predict similar
+# actions

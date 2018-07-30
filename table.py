@@ -1,37 +1,12 @@
-# Work in progress, many shims until gui for testing
-
-# Run with "python table.py"
-
-# Table class instance holds dictionary with keys=='player_name_string' and value==Player_class_instance
-# Table holds community objects and context of current play such as community cards and legal bet amounts
-# Player instances hold attributes relevant to themselves like hole cards and stack
-
-# Table needs num_players, num_chips, big_blind on init
-# plyr_dict is populated
-# call post_blinds()
-# call play_hand_loop() to continue play until hand is resolved
-# either reward player OR one or more showdowns with optional create_sidepots
-# move button to next player with stack
-# clean, remove players with no stack, prompt for optional next hand
 
 # TO DO 
 
 # If player runs out of chips remove from seat_order/in_hand AFTER hand is resolved
-
-# take away illegal options, raise/bet with only enough chips to call
-# Change first call of post_blinds() to inside play_hand_loop(), remove from showdown/resolution, maybe?
 # Test create_sidepots() with edge cases
 # fix remainder chips in showdown()
 # some tie_break lens are 3, is this correct?
 # division is changing ints to floats in player.stack or table.pot
 
-# Could use entire decision path of winning hand as positively labeled data point
-# Use losing paths as negatively labeled data points
-
-# Should be provably correct with input validation
-# Current command line parameter 'hints' become input validation
-# (only range of hints is presented as possible input through sliders/buttons, no typed/entered input)
-# This means the range of input is known and testable
 
 import player, deck, hands
 from random import shuffle
@@ -51,17 +26,12 @@ class Table():
         
         self.plyr_dict['player1'].human = 1
         
-        # seat_order[0] is dealer, seat_order[1] is SB
-        # seat_order changes to reflect the dealer button being passed
         self.seat_order = [player for player in self.plyr_dict.keys()]
         shuffle(self.seat_order)
         
         self.round = 1
         self.min_bet = big_blind
-        # Players in order of action, first to act is first element
-        # is set during post_blinds(), first elem popped to back after each hand
         self.left_to_act = []
-        # Players still in the current hand, but not necessarily left to act in the round
         self.in_hand = []
         self.cost_to_play = 0
         
@@ -125,13 +95,7 @@ class Table():
         self.in_hand = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
-    # At end of hand, if a player is all-in, run this
-    # For each player in_hand and 'all-in', in order of ascending begin_hand_chips
-    # Create a sidepot by contributing from each other player: max(player.begin_hand_chips, other_player.chips_in_pot)
-    # The player or players whose equivalent begin_hand_chips values were used to create this sidepot...
-    # are eligible for this pot and no further created pots
-    # When all chips from table.pot are consumed, the current pot that finished consuming them is the 'main' pot
-    # All remaining players are eligible for this and all previous pots
+
     # RETURN VALUE --> ([sidepot1,sidepot2,...,mainpot],[[players_elig_sidepot1],[players_elig_sidepot2],...,
     # [players_elig_mainpot]]
     # Call if at least one sidepot ncsry, at least one player is all-in/in_hand
@@ -218,7 +182,9 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
-    # Determine active player, legal options, return legal options range, whether human or bot
+    # Determine active player, legal options, return legal options range
+    # working here, this should be where I check for BB special options
+    # for either 2 or more players
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
         if self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
@@ -231,171 +197,38 @@ class Table():
             ('fold'))
         return acts
         
-    # should this also take a player? or just use the state anyway
-    def apply_action(self, some_action):
+    # apply the action of the player, optional amount for call, bet, raze 
+    def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]
         
 
-    # working here, remove play_hand_loop() for gui, replace with get_action() which returns action of active player
-    # table object should be able to just call bet/raise/call/check/fold with appr player
-    def play_hand_loop(self):
-            if new_hand:
-                self.deal_hole_cards()
-                self.post_blinds()
-                new_hand = 0
-            plyr_str = self.left_to_act[0]
-            # Skip player input if player is all-in (player 'checks')
-            if self.plyr_dict[plyr_str].stack == 0:
-                act = 'check'
-            # Otherwise, prompt the player for input
-            elif self.plyr_dict[plyr_str].human == 1:# USER INPUT goes here
+    def reward_only_player(self):
+        assert(len(self.in_hand)==1)
+        self.plyr_dict[self.in_hand[0]].stack += self.pot
+        self.pot = 0
+        self.clean_table_after_hand()
 
-################ Begin Input Logic, constraints become input validation in GUI
-                # IF ONLY 2 PLAYERS:
-                if len(self.seat_order) == 2:
-                    # if round1 and plyr is D+1 and cost_to_play has not changed:
-                    if self.round == 1 and plyr_str == self.seat_order[1] and self.cost_to_play == self.big_blind:
-                        # present bb option check/raise/fold
-                        act = input('c for check, r for raise, f for fold')
-                        if act == 'r':
-                            amount = input('raise how much? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
-                    # elif table not open:
-                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round > 0:
-                        # present call/raise/fold
-                        act = input('c for call, r for raise, f for fold')
-                        if act == 'c':
-                            act = 'C'
-                            amount = min(self.plyr_dict[plyr_str].stack, self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
-                        elif act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack, self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
-                    # elif table is open:
-                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
-                        # present bet/check/fold
-                        act = input('b for bet, c for check, f for fold')
-                        if act == 'b':
-                            amount = input('How much to bet? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
-################## else (MORE THAN 2 PLAYER):
-                elif len(self.seat_order) > 2:
-                    # if round1 and plyr is D+2 and cost_to_play has not changed:
-                    if self.round == 1 and plyr_str == self.seat_order[2] and self.cost_to_play == self.big_blind:
-                        # present bb option check/raise/fold
-                        act = input('c for check, r for raise, f for fold')
-                        if act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
-                    # elif table not open:
-                    elif self.cost_to_play - self.plyr_dict[plyr_str].chips_this_round > 0:
-                        # present call/raise/fold
-                        act = input('c for call, r for raise, f for fold')
-                        if act == 'c':
-                            act = 'C'
-                            amount = min(self.plyr_dict[plyr_str].stack,self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round)
-                        elif act == 'r':
-                            amount = input('How much to raise? Between '+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack-self.cost_to_play+self.plyr_dict[plyr_str].chips_this_round))
-                    # elif table open:
-                    elif self.cost_to_play-self.plyr_dict[plyr_str].chips_this_round == 0:
-                        # present bet/check/fold
-                        act = input('b for bet, c for check, f for fold')
-                        if act == 'b':
-                            amount = input('How much to bet? Between'+str(min(self.plyr_dict[plyr_str].stack,self.min_bet))+' and '+str(self.plyr_dict[plyr_str].stack))
-######################################### END USER INPUT / BEGIN BOT ACTION
-########### Pass relevant table info, returns tuple like ('r',100) or ('f',0) for raise 100 or fold
-            else:
-                action = self.plyr_dict[plyr_str].bot_action(self.cost_to_play, self.big_blind, self.min_bet)
-######################################### END BOT ACTION
-            # Apply Input Action to table/player
-            # Action potentially modifies table attributes and attributes of current player only
-            # (player action does not change attributes of other player objects)
-            action = (act,int(amount))
-            if action[0] == 'b':
-                self.bet(plyr_str, action[1])
-            elif action[0] == 'r':
-                self.raze(plyr_str, action[1])
-            elif action[0] == 'C':
-                self.call(plyr_str, action[1])
-            elif action[0] == 'f':
-                self.fold(plyr_str)
-            elif action[0] == 'c':
-                self.check(plyr_str)
-######################################### END APPLY INPUT ACTION / BEGIN END_ROUND
-            # skip to here if player is all-in, having skipped input
-            # By here, player's action will have removed them from self.left_to_act (from in_hand if fold)
-            # Check if only one player remains in hand
-            if len(self.in_hand) == 1:
-                # reward remaining player
-                print('!!! winner of '+str(self.pot)+' chips!!!')
-                self.plyr_dict[self.in_hand[0]].stack += self.pot
-                print('your stack is '+str(self.plyr_dict[self.in_hand[0]].stack))
-                self.pot = 0
-############### TESTS ####
-                x = 0
-                for p in self.seat_order:
-                    x += self.plyr_dict[p].stack
-                assert(x==self.num_chips*self.num_players)
-############### END TESTS #####
-                # clean table, also cleans players, maintains player stacks and table.seat_order
-                self.clean_table_after_hand()
-                value = input('Another hand? y for yes, n for no')
-                if value == 'y':
-                    self.move_button_remove_chipless_players()
-                    self.post_blinds()
-                    sentinel = 1
-                else:
-                    sentinel = 0
-            # CHECK FOR END OF FINAL ROUND, SHOWDOWN RESOLUTION
-            elif self.left_to_act == [] and self.round == 4:
-                # Check if sidepots are ncsry, if one or more players are all-in
-                for p in self.in_hand:
-                    assert(self.plyr_dict[p].stack >= 0)
-                    if self.plyr_dict[p].stack == 0:
-                        # return type of create_sidepots is list of 2-tuples, 1st elem is pot/int, 2nd is list of
-                        # player strings (players that are eligible for the pot)
-                        pots_w_elig_plyrs = self.create_sidepots()
-                        for pot_n_plyrs in pots_w_elig_plyrs:
-                            print(pot_n_plyrs)
-                            self.showdown(pot_n_plyrs)
-                        break
-                else: # for/else loop, if no player is all-in, go to here, just resolve one showdown()
-                    pot_and_plyrs = (self.pot, self.in_hand[:])
-                    self.showdown(pot_and_plyrs)
-                # Showdowns complete, players rewarded
-                # Prompt whether to end loop or not
-                value = input('Another hand? y for yes, n for no')
-                self.clean_table_after_hand()
-                if value == 'y':
-                    self.move_button_remove_chipless_players()
-                    new_hand = 1
-                    sentinel = 1
-                else: # exit program
-                    sentinel = 0
-###################### END SHOWDOWN RESOLUTION ###########
-###################### OTHERWISE ADVANCE TO NEXT ROUND ###########
-            elif len(self.left_to_act) == 0:
-                if self.round == 1:# preflop to flop, deal 3 com_cards
-                    self.com_cards.append(self.deck.draw_card())
-                    self.com_cards.append(self.deck.draw_card())
-                    self.com_cards.append(self.deck.draw_card())
-                elif self.round == 2:# flop to turn, deal 1 com_card
-                    self.com_cards.append(self.deck.draw_card())
-                elif self.round == 3:# turn to river, deal 1 com_card
-                    self.com_cards.append(self.deck.draw_card())
-                # advance round
-                self.round += 1
-                # reset cost_to_play, min_bet
-                self.cost_to_play = 0
-                self.min_bet = self.big_blind
-                # reset players chips this round, BUT NOT chips_in_pot
-                for plyr in self.seat_order:
-                    self.plyr_dict[plyr].chips_this_round = 0
-                    # Reset left_to_act
-                    if plyr in self.in_hand:
-                        self.left_to_act.append(plyr)
-                #### CONTINUE LOOP ####
+    def advance_round(self):
+        if self.round == 1:# preflop to flop, deal 3 com_cards
+            self.com_cards.append(self.deck.draw_card())
+            self.com_cards.append(self.deck.draw_card())
+            self.com_cards.append(self.deck.draw_card())
+        elif self.round == 2:# flop to turn, deal 1 com_card
+            self.com_cards.append(self.deck.draw_card())
+        elif self.round == 3:# turn to river, deal 1 com_card
+            self.com_cards.append(self.deck.draw_card())
+        # advance round
+        self.round += 1
+        # reset cost_to_play, min_bet
+        self.cost_to_play = 0
+        self.min_bet = self.big_blind
+        # reset players chips this round, BUT NOT chips_in_pot
+        for plyr in self.seat_order:
+            self.plyr_dict[plyr].chips_this_round = 0
+            # Reset left_to_act
+            if plyr in self.in_hand:
+                self.left_to_act.append(plyr)
 
-
-    # rotates seating position so that dealer button is on next player with chips
-    # (skips players who have just been reduced to zero stack, so as not to skip player's chance at dealer position)
-    # Rebuilds self.seat_order with players that have > 0 stack remaining
-    # Maintains previous seating order
     def move_button_remove_chipless_players(self):
         new_seats = []
         for plyr in self.seat_order[1:] + self.seat_order[0:1]:
@@ -429,7 +262,6 @@ class Table():
             amount = pot / len(winners)
             for p in winners:
                 self.plyr_dict[p].stack += amount
-                print(p+' wins DEBUG '+str(pot))
 
 
 ############ TESTS #################
