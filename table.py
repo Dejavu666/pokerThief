@@ -104,28 +104,28 @@ class Table():
         pot_chips = self.pot
         pots_w_elig_players = []
         all_in = []
-        for plyr in self.seat_order:
-            if plyr in self.in_hand and self.plyr_dict[plyr].stack == 0:# if player is all-in
+        for plyr in self.in_hand:
+            if self.plyr_dict[plyr].stack == 0:# if player is all-in
                 all_in.append((self.plyr_dict[plyr].begin_hand_chips, plyr))
         all_in.sort()
+        # keep only unique pot values in all_in
+        stacks = [x[0] for x in all_in if x[0] not in stacks]
         # all_in looks like: [(lowest_plyr.begin_hand_chips, lowest_plyr_str),...
         # just consume players that are all-in, only they need sidepots
-        all_in_cpy = all_in[:]
-        for stack_plyr_tup in all_in:
+        for stack in stacks:# for each player that needs a sidepot
             sidepot = 0
-            for plyr in self.seat_order:
-                amount = min(self.plyr_dict[plyr].chips_in_pot, pot_chips)
+            for plyr in self.seat_order:# build the sidepot
+                amount = min(self.plyr_dict[plyr].chips_in_pot, stack, pot_chips)
                 sidepot += amount
                 pot_chips -= amount
-                if pot_chips == 0:# pot is consumed, current sidepot is mainpot
+                if pot_chips == 0:# pot is consumed, current (last) sidepot is mainpot
                     pots_w_elig_players.append((sidepot, players_in_hand))
                     return pots_w_elig_players
+            pots_w_elig_players.append((sidepot, players_in_hand))
             # remove players with equiv, least chips_in_pot from players_in_hand
-            low_stack = all_in_copy[0][0]
             for player in self.in_hand:
-                if self.plyr_dict[player].chips_in_pot == low_stack:
+                if self.plyr_dict[player].chips_in_pot == stack:
                     players_in_hand.remove(player)
-                    all_in_copy = all_in_copy[1:] # modify object while looping on it
 
     def clean_table_after_hand(self):
         self.pot = 0
@@ -187,6 +187,8 @@ class Table():
     # for either 2 or more players
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
+        # special BB options
+        if self.round == 1 and self.min_bet == self.big_blind and ...
         if self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
                     ('check'),\
@@ -200,7 +202,7 @@ class Table():
     # apply the action of the player, optional amount for call, bet, raze 
     def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]
-        
+        # working here
 
     def reward_only_player(self):
         assert(len(self.in_hand)==1)
