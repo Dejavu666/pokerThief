@@ -1,45 +1,3 @@
-# GUI layer
-
-# Pull apart table object so no loop is ncsry
-# table instance exists, each action by a player (input, func dispatched by gui widget)
-# updates player and table amounts and returns nothing
-# Actions that need to be dispatched to underlying table object:
-# -get dependencies for instantiation from gui, istantiate object
-# -seat players
-# -hand actions
-#   -deal_cards
-#   -post_blinds
-#   -check for 'skip all-in player'
-#   -determine legal actions and parameter range, present to user/gui
-#   -get player action and apply (update player attrs, table attrs) (alter left_to_act, in_hand, etc...)
-#   -check for only one remaining player
-#   -check for end of hand, if so check for ncsry create_sidepots(), showdown()
-#   -after showdown(), should completely return, not be in any stacks besides gui mainloop
-#   -if no return from 'one-remain-player' or 'showdown', advance round 
-
-
-# Old gui uses root tk object with multiple frames dividing screen as children of root
-# change to just dispatch actions from gui instead of so much logic
-# currently, the player_window frame calls populate() on itself which presents legal player actions
-# any of these actions call nextPlayer() which updates some info and calls populate() again to replenish the
-# window with the next player information
-# The above should be changed so that the first populate()(heretofore, get_action()(to be called after post_blinds() at the begin of a new hand, is a signal sent to table object
-# table object should rotate to active player position (first player in left_to_act, table skips all-in players)
-# and return a signal to present either bot-thinking or player-option window (returned with the player-option
-# are the legal player actions and parameters, bot-window returns chosen bot action
-
-# ... how to resolve end of hand checks...can put either at end of applied actions (bet/call/check)
-# OR at the begin of populate()?...
-
-# either bot-window.after(), or player input sends signal back to table of action to apply
-# table applies action to itself...
-
-# tkinter reference
-# http://effbot.org/tkinterbook/
-# https://docs.python.org/3/library/tkinter.html#a-simple-hello-world-program
-
-
-
 import table
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -265,8 +223,8 @@ class Left_panel_buttons(tk.Frame):
                 
     # post blinds, called by self.pstBlinds button
     def postBlinds(self):
-        room.table.postBlinds()
-        room.tableWindow.updateTableChips()
+        room.table.post_blinds()
+#         room.tableWindow.updateTableChips()
         
     # calls populate() to get the first action, called by self.gtActn button
     def getAction(self):
@@ -300,21 +258,9 @@ class Start_game_bar(tk.Frame):
         tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
         self.b=tk.Button(self,takefocus=1,text="Start Game!",highlightbackground='black',command=self.startGameEntries)
         self.b.pack(side='left')
-        self.seatPlayerButton = tk.Button(self,state='disabled',takefocus=1,text='Seat Players',highlightbackground='black',command=self.seatPlayers)
-        self.seatPlayerButton.pack(side='left')
         self.quitButton = tk.Button(self,takefocus=1,text='Quit',highlightbackground='black',command=self.areYouSureQuit)
         self.quitButton.pack(side='left')
     
-    def seatPlayers(self):
-        self.seatPlayerButton.configure(state='disabled')
-        room.table = table.Table(bigBlind=room.bigBlindSize)
-        plyrList = []
-        for x in range(room.numberOfPlayers):
-            plyrList.append('player'+str(x+1))
-        room.table.seatPlayers(plyrList,room.stackSize)
-        room.tableWindow.createPlayerImages(room.table.playerOrder)
-        room.tableWindow.createChipImages()
-        
     def areYouSureQuit(self):
         self.quitGamePopup = QuitGamePopup(self)
         
@@ -496,28 +442,22 @@ class StartGamePopup(object):
         self.bigBlindEntry = tk.Scale(self.top,relief='raised',from_=20,to=self.stackSizeEntry.get(),resolution=20,orient='horizontal',fg='red',bg='black')
         self.bigBlindEntry.pack()
         self.b=tk.Button(self.top,bg='black',highlightbackground='maroon',relief='raised',text='Ok',fg='maroon',font=("Helvetica bold italic",26)\
-       ,takefocus=1,command=self.verify)
+       ,takefocus=1,command=self.start_game)
         self.b.pack()
     
-    # verify that number of players, starting stack and blinds are valid values
-    def verify(self):
+    # When 'OK' is pressed after 'Start Game'
+    def start_game(self):
         room.numberOfPlayers = self.playersEntry.get()
         room.stackSize = self.stackSizeEntry.get()
         room.bigBlindSize = self.bigBlindEntry.get()
-        try:
-            room.numberOfPlayers = int(room.numberOfPlayers)
-            if room.numberOfPlayers < 2 or room.numberOfPlayers > 9:
-                raise
-            room.stackSize = int(room.stackSize)
-            if room.stackSize % 10 != 0 or room.stackSize < 100:
-                raise
-            room.bigBlindSize = int(room.bigBlindSize)
-            if room.bigBlindSize % 20 != 0 or room.stackSize/10 < room.bigBlindSize:
-                raise
-            self.top.destroy()
-        except:
-            pass
-        room.startGameBar.seatPlayerButton.configure(state='normal')
+        room.table = table.Table(big_blind=room.bigBlindSize,num_players=room.numberOfPlayers,num_chips=room.stackSize)
+        plyrList = []
+        for x in range(room.numberOfPlayers):
+            plyrList.append('player'+str(x+1))
+        self.top.destroy()
+#         room.tableWindow.createPlayerImages(room.table.playerOrder)
+#         room.tableWindow.createChipImages()
+        
 
 # just a geometry organizer for other classes
 class Main_application(tk.Frame):
@@ -549,231 +489,3 @@ room.pack(fill=tk.BOTH, expand=tk.YES)
 # table.post_blinds()
 
 root.mainloop()
-
-
-
-
-
-
-
-
-
-# NICE TO HAVE
-# fit window and children to various screen-size
-# revealing showdown hands in order from dealer's left
-# bind hotkeys to player options (check,raise,call,bet,fold), change args to event=None, operate on room.table.leftToAct[0]
-# when player(s) win, should tell what the hand is/show winning cards (the 5 of 7 used)
-
-
-# 
-# root = tk.Tk() 
-# root.title("Poker")
-# root.geometry("1025x720")
-# root.configure(background="black")
-# root.minsize(1025,720)
-# 
-# 
-# # this populates the player area with current player info
-#     def populate(self):
-#         # skip player if all-in
-#         # WORKING HERE list index out of range error
-#         print(room.table.playerDict, ' is playerDict')
-#         print(room.table.leftToAct, ' is leftToAct')
-#         if room.table.leftToAct != []:
-#             if room.table.playerDict[room.table.leftToAct[0]].stackSize == 0:
-#                 room.table.leftToAct.remove(room.table.leftToAct[0])
-#                 if room.table.leftToAct == []:
-#                     self.endRound()
-#                 else:
-#                     # memory leak? nextPlayer calls populate until?
-#                     self.nextPlayer()
-#         # end skip player if all in
-#         plyr = room.table.leftToAct[0]
-#         # WORKING
-#         # IF PLAYER IS BOT
-#         if room.table.playerDict[plyr].human == 0:
-#             self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
-#             self.createBotPlayerImage(plyr)
-#             # If pot is open
-#             if room.table.playerDict[plyr].inFront == room.table.costToPlay:
-#                 # do i need to pass the table object or can i refer to it from bot/player instance?
-#                 botAction, maybeAmount = room.table.playerDict[plyr].getRandomCheckAction(plyr,room.table)
-#                 if botAction == 'check':
-#                     self.check(plyr)
-#                 else:
-#                     self.bet(plyr,maybeAmount)
-#             # pot is not open
-#             else:
-#                 botAction, maybeAmount = room.table.playerDict[plyr].getRandomCallAction(plyr,room.table)
-#                 if botAction == 'call':
-#                     self.call(plyr)
-#                 elif botAction == 'raise':
-#                     self.Raise(plyr,maybeAmount)
-#                 else:
-#                     self.fold(plyr)
-#         else:# actions for human user
-#             self.createCurrentPlayerImage(plyr)
-#             if room.table.playerDict[plyr].inFront == room.table.costToPlay:
-#                 self.createCheckButtons(plyr)
-#             else:
-#                 self.createCallButtons(plyr)
-#         
-#     # these call underlying table methods
-#     # then nextPlayer()|endRound()
-#     
-#     def call(self,currentPlyr):
-#         room.table.call(currentPlyr)
-#         room.tableWindow.updateTableChips()
-#         self.destroyButtons()
-#         if room.table.leftToAct != []:
-#             self.nextPlayer()
-#         else:
-#             self.endRound()
-#         
-#     # note Raise instead of raise
-#     def Raise(self,currentPlyr,amount=0):
-#         try:
-#             amount = self.wagerEntry.get()
-#         except:
-#             pass
-#         room.table.Raise(currentPlyr,amount)
-#         room.tableWindow.updateTableChips()
-#         self.destroyButtons()
-#         if room.table.leftToAct != []:
-#             self.nextPlayer()
-#         else:
-#             self.endRound()
-#         
-#     def fold(self,currentPlyr):
-#         room.table.fold(currentPlyr)
-#         room.tableWindow.updateTableChips()
-#         room.imageList[currentPlyr].c1.configure(image=room.noCard)
-#         room.imageList[currentPlyr].c2.configure(image=room.noCard)
-#         self.destroyButtons()
-#         if room.table.leftToAct != []:
-#             self.nextPlayer()
-#         else:
-#             self.endRound()
-#         
-#     def bet(self,currentPlyr,amount=0):
-#         try:
-#             amount = self.wagerEntry.get()
-#         except:
-#             pass
-#         room.table.bet(currentPlyr,amount)
-#         room.tableWindow.updateTableChips()
-#         self.destroyButtons()
-#         if room.table.leftToAct != []:
-#             self.nextPlayer()
-#         else:
-#             self.endRound()
-#     
-#     def check(self,currentPlyr):
-#         room.table.check(currentPlyr)
-#         room.tableWindow.updateTableChips()
-#         self.destroyButtons()
-#         if room.table.leftToAct != []:
-#             self.nextPlayer()
-#         else:
-#             self.endRound()
-#         
-#         
-#         # remove this, and other logic from gui
-#     # nextPlayer is only called when leftToAct has at least one remaining player
-#     def nextPlayer(self):
-#         # check if folded around to last player, regardless of last player all-in status
-#         if len(room.table.leftToAct) == 1 and len(room.table.inHand) == 1:
-#             tmp = room.table.pot
-#             room.table.playerDict[room.table.leftToAct[0]].stackSize += room.table.pot
-#             room.table.pot = 0
-#             room.tableWindow.updateTableChips()
-#             self.plyrMsg.configure(text=room.table.leftToAct[0]+' Wins '+str(tmp)+' chips!')
-#         else:
-#             self.populate()
-#     
-#     def endRound(self):
-#         tmpPot = room.table.pot
-#         # WORKING HERE BUG1
-#         # if folded around to player, reward last player and return
-#         if room.table.leftToAct == [] and len(room.table.inHand) == 1: 
-#             tmp = room.table.pot
-#             room.table.playerDict[room.table.inHand[0]].stackSize += room.table.pot
-#             room.table.pot = 0
-#             room.tableWindow.updateTableChips()
-#             self.plyrMsg.configure(text=room.table.inHand[0]+' Wins '+str(tmp)+' chips!')
-#             return
-#         winners = room.table.endRound()
-#         if winners:
-#             # pots is either an int in the case of 'no sidepots', or a list of ints
-#             pots = winners[0]
-#             # potsElig is either a list of players in the case of 'no sidepots', or a list of lists of players
-#             potsElig = winners[1]
-#         room.tableWindow.updateTableChips()
-#         if room.table.round == 'flop':
-#             room.tableWindow.dealFlop()
-#             room.playerWindow.populate()
-#         elif room.table.round == 'turn':
-#             room.tableWindow.dealTurn()
-#             room.playerWindow.populate()
-#         elif room.table.round == 'river':
-#             room.tableWindow.dealRiver()
-#             room.playerWindow.populate()
-#         elif room.table.round == 'showdown':
-#             if winners:
-#                 print winners
-#                 # check for 'no sidepots' or 'sidepots in showWinners
-#                 self.showWinners(pots,potsElig)
-#             
-#     def destroyButtons(self):
-#         try:
-#             self.b1.destroy()
-#             self.b2.destroy()
-#             self.b3.destroy()
-#             self.wagerEntry.destroy()
-#             self.card1.configure(image=None)
-#             self.card2.configure(image=None)
-#         except:
-#             pass
-#     # pots is either int or list of ints, eligPlayers is either list of players or list of lists of players
-#     # no sidepots: eligPlayers == ['player1','player2'],pots == 500
-#     # sidepots: eligPlayers == [['player1','player2','player3'],['player2','player3']], pots == [180,100,100]
-#     def showWinners(self,pots,eligPlayers):
-#         plyrs = eligPlayers
-#         # check if sidepots happened
-#         if type(pots) == int: # no sidepots happened/sidepots would be type list
-#             self.plyrMsg.configure(text=plyrs[0]+' Wins '+str(pots)+' chips!')
-#             self.cardimg1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyrs[0]].hand[0]+'.gif'))
-#             self.card1.configure(image=self.cardimg1)
-#             self.cardimg2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyrs[0]].hand[1]+'.gif'))
-#             self.card2.configure(image=self.cardimg2)
-#             room.imageList[plyrs[0]].c1.configure(image=self.cardimg1)
-#             room.imageList[plyrs[0]].c2.configure(image=self.cardimg2)
-#             if len(plyrs) > 1:
-#                 plyrs = plyrs[1:]
-#                 self.after(3300,self.showWinners,pots,plyrs)
-#         else:
-#             # sidepots happened
-#             # delays showing of players in gui
-#             if pots != []:
-#                 self.after(3300,self.showSidepotWinners,pots[0],plyrs[0])
-#                 pots.remove(pots[0])
-#                 plyrs.remove(plyrs[0])
-#                 self.after(3300,self.showWinners,pots,plyrs)
-#                 
-#     # should pass in one pot and list of eligible players?
-#     # need to find bestHandAmong the eligible players
-#     def showSidepotWinners(self,pots,plyrs):
-#         # plyrs is a list of one or more players
-#         plyrs = room.table.bestHandAmong(plyrs)
-#         self.plyrMsg.configure(text=plyrs[0]+' Wins '+str(pots/len(plyrs))+' chips!')
-#         self.cardimg1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyrs[0]].hand[0]+'.gif'))
-#         self.card1.configure(image=self.cardimg1)
-#         self.cardimg2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyrs[0]].hand[1]+'.gif'))
-#         self.card2.configure(image=self.cardimg2)
-#         # imageList saves the images so not gc'ed
-#         room.imageList[plyrs[0]].c1.configure(image=self.cardimg1)
-#         room.imageList[plyrs[0]].c2.configure(image=self.cardimg2)
-#         if len(plyrs) > 1:
-#             pots -= pots/len(plyrs)
-#             plyrs = plyrs[1:]
-#             self.after(2300,self.showSidepotWinners,pots,plyrs)
