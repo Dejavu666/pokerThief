@@ -72,7 +72,7 @@ class Table():
             self.in_hand = self.seat_order[:]
             self.cost_to_play = self.big_blind
         
-    # post_blinds for only 2 players
+    # post_blinds for only 2 players, helper func called by post_blinds()
     def post_blinds_2player(self):
         # dealer enough for SB
         if self.plyr_dict[self.seat_order[0]].stack >= self.big_blind/2:
@@ -95,9 +95,7 @@ class Table():
         self.in_hand = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
-
-    # RETURN VALUE --> ([sidepot1,sidepot2,...,mainpot],[[players_elig_sidepot1],[players_elig_sidepot2],...,
-    # [players_elig_mainpot]]
+    # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
     # Call if at least one sidepot ncsry, at least one player is all-in/in_hand
     def create_sidepots(self):
         players_in_hand = self.in_hand[:]
@@ -138,8 +136,6 @@ class Table():
         for plyr in self.seat_order:
             self.plyr_dict[plyr].clean_player_after_hand()
 
-    # Starting from the plyr_str's index+1 in seat_order, if player is in_hand but not in left2act,
-    # append player to left2act
     def repop_left_to_act(self, plyr_str):
         self.left_to_act = []
         players = self.seat_order[self.seat_order.index(plyr_str)+1:] + self.seat_order[:self.seat_order.index(plyr_str)]
@@ -156,7 +152,6 @@ class Table():
         self.min_bet = amount
         self.repop_left_to_act(plyr)
         
-    
     def check(self, plyr):
         self.left_to_act.remove(plyr)
     
@@ -167,7 +162,6 @@ class Table():
         self.plyr_dict[plyr].contribute_chips(amount)
         self.left_to_act.remove(plyr)
 
-    # raise/raze prevent name collision/reuse with raise python keyword
     def raze(self, plyr, raise_amount):
         assert(raise_amount >= self.min_bet)
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
@@ -182,7 +176,6 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
-
     def is_bb_option_avail(self, player):
         if self.round == 1 and self.min_bet == self.big_blind:
             if len(self.seat_order)==2:# only 2 players
@@ -192,18 +185,36 @@ class Table():
                 if player == self.seat_order[2]:
                     return True
     
-    # Determine active player, legal options, return legal options range
-    # working here, this should be where I check for BB special options
-    # for either 2 or more players
-    # also skip all-in players
+    def skip_all_in_plyr(self):
+        if len(self.left_to_act)>0:
+            plyr = self.left_to_act[0]
+            if self.plyr_dict[plyr].stack == 0:
+                self.left_to_act.remove(plyr)
+    
+    def sidepots_check(self):
+        for p in self.in_hand:
+            if self.plyr_dict[p].stack == 0:
+                return True
+        return False
+    
+    def is_round_or_hand_over(self):
+        if len(self.in_hand) == 1: # only one player
+            self.reward_only_player()
+        elif self.left_to_act == []: # no players left to act
+            if self.round == 4: # last round
+                if self.sidepots_check() == True:
+                    pots_plyrs_list = self.create_sidepots()
+                    for pot_plyrs_tup in pots_plyrs_list:
+                        self.showdown(pot_plyrs_tup)
+                else:
+                    self.showdown((pot,[self.in_hand[:]]))
+                self.clean_table_after_hand()
+            else:
+                assert(self.round in [1,2,3])
+                self.advance_round()
+    
     def get_legal_actions(self):
-        if self.left_to_act == []:
-            self.end_round()
         plyr = self.left_to_act[0]
-        # skip player if all-in
-        if self.plyr_dict[plyr].stack == 0:
-            self.left_to_act.remove(plyr)
-            self.get_legal_actions()
         # special BB options
         if self.is_bb_option_avail(plyr):
             acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
@@ -219,7 +230,6 @@ class Table():
             ('fold'))
         return acts
         
-    # Apply the action of the player, optional amount for call, bet, raze 
     def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]
         if action == 'raise':
@@ -272,7 +282,6 @@ class Table():
     def showdown(self, pot_and_player_tuple):
         # Get highest hand_rank
         players = pot_and_player_tuple[1]
-        print(players)
         pot = pot_and_player_tuple[0]
         max_rank = 0
         top_plyrs = []
@@ -286,7 +295,6 @@ class Table():
         # if one winner: award player
         if len(top_plyrs) == 1:
             # reward top_plyrs[0]
-            print(top_plyrs[0]+' wins '+str(pot))
             self.plyr_dict[top_plyrs[0]].stack += pot
             self.pot -= pot
         else: # tie needs to be broken for this one pot, working bug, what about remainder here?
@@ -303,4 +311,11 @@ for p in table.seat_order:
     table.plyr_dict[p].human = 1
 table.deal_hole_cards()
 table.post_blinds()
-print(table.get_legal_actions())
+while(1):
+    table.skip_all_in_plyr()
+    table.is_round_or_hand_over()
+    plyr = table.left_to_act[0]
+    print(table.get_legal_actions())
+    action = input('input action bet, check, fold, call, raise ')
+    amount = int(input('optional input amount '))
+    table.apply_action(plyr,action,amount)
