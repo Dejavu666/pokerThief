@@ -182,9 +182,13 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
+    def present_big_blind_option(self, player):
+        
+
     # Determine active player, legal options, return legal options range
     # working here, this should be where I check for BB special options
     # for either 2 or more players
+    # also skip all-in players
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
         # special BB options
@@ -199,10 +203,19 @@ class Table():
             ('fold'))
         return acts
         
-    # apply the action of the player, optional amount for call, bet, raze 
+    # Apply the action of the player, optional amount for call, bet, raze 
     def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]
-        # working here
+        if action == 'raise':
+            self.raze(player, amount)
+        elif action == 'check':
+            self.check(player)
+        elif action == 'fold':
+            self.fold(player)
+        elif action == 'bet':
+            self.bet(player, amount)
+        elif action == 'call':
+            self.call(player, amount)
 
     def reward_only_player(self):
         assert(len(self.in_hand)==1)
@@ -238,7 +251,8 @@ class Table():
                 new_seats.append(plyr)
         self.seat_order = new_seats[:]
         
-
+    # input looks like: (800, [player1,player2,...])
+    # one pot (side or main) and the list of players who are eligible to win all chips
     def showdown(self, pot_and_player_tuple):
         # Get highest hand_rank
         players = pot_and_player_tuple[1]
