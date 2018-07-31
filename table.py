@@ -182,18 +182,34 @@ class Table():
         self.left_to_act.remove(plyr)
         self.in_hand.remove(plyr)
 
-    def present_big_blind_option(self, player):
-        
 
+    def is_bb_option_avail(self, player):
+        if self.round == 1 and self.min_bet == self.big_blind:
+            if len(self.seat_order)==2:# only 2 players
+                if player == self.seat_order[1]:
+                    return True
+            else:# more than 2 players
+                if player == self.seat_order[2]:
+                    return True
+    
     # Determine active player, legal options, return legal options range
     # working here, this should be where I check for BB special options
     # for either 2 or more players
     # also skip all-in players
     def get_legal_actions(self):
+        if self.left_to_act == []:
+            self.end_round()
         plyr = self.left_to_act[0]
+        # skip player if all-in
+        if self.plyr_dict[plyr].stack == 0:
+            self.left_to_act.remove(plyr)
+            self.get_legal_actions()
         # special BB options
-        if self.round == 1 and self.min_bet == self.big_blind and ...
-        if self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
+        if self.is_bb_option_avail(plyr):
+            acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
+                    ('check'),\
+                    ('fold'))
+        elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
                     ('check'),\
                     ('fold'))
@@ -282,9 +298,9 @@ class Table():
 
 ############ TESTS #################
 
-# table = Table(4,1000,20)
-# for p in table.seat_order:
-#     table.plyr_dict[p].human = 1
-# table.deal_hole_cards()
-# table.post_blinds()
-# print(table.get_legal_actions())
+table = Table(4,1000,20)
+for p in table.seat_order:
+    table.plyr_dict[p].human = 1
+table.deal_hole_cards()
+table.post_blinds()
+print(table.get_legal_actions())
