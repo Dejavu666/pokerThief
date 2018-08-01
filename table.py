@@ -46,7 +46,6 @@ class Table():
         if len(self.seat_order) == 2:
             # helper function, blind order is different for 2players
             self.post_blinds_2player()
-            return
         else:
             # dealer+1 enough chips for SB
             if self.plyr_dict[self.seat_order[1]].stack >= self.big_blind/2:
@@ -208,7 +207,7 @@ class Table():
                         self.showdown(pot_plyrs_tup)
                         return 'sentinel'
                 else:
-                    self.showdown((self.pot,[self.in_hand[:]]))
+                    self.showdown((self.pot,self.in_hand[:]))
                     return 'sentinel'
                 self.clean_table_after_hand()
             else:
@@ -218,7 +217,7 @@ class Table():
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
         # special BB options
-        if self.is_bb_option_avail(plyr):
+        if self.is_bb_option_avail(plyr) == True:
             acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
                     ('check'),\
                     ('fold'))
@@ -288,7 +287,7 @@ class Table():
         max_rank = 0
         top_plyrs = []
         for plyr in players:
-            hands.assign_hand_rank(plyr, self)
+            self.assign_hand_rank(plyr)
             if self.plyr_dict[plyr].hand_rank > max_rank:
                 top_plyrs = [plyr]
                 max_rank = self.plyr_dict[plyr].hand_rank
@@ -305,6 +304,47 @@ class Table():
             for p in winners:
                 self.plyr_dict[p].stack += amount
 
+    # Take a string that is a Player name
+    # Assigns hand_rank and tie_break values to the Player object
+    # Only makes sense to call when Player has 2 cards and table.community has 5
+    def assign_hand_rank(self, plyr):
+        hand = self.plyr_dict[plyr].hand + self.com_cards
+        handranks_w_ace_as_one = []
+        for card in hand:
+            if card[0] == 14:
+                handranks_w_ace_as_one.append(1)
+                handranks_w_ace_as_one.append(14)
+            else:
+                handranks_w_ace_as_one.append(card[0])
+        handranks_w_ace_as_one.sort(reverse=True)
+        if hands.straight_flush_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 9
+            self.plyr_dict[plyr].tie_break = hands.straight_flush_finder(hand)
+        elif hands.four_of_a_kind_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 8
+            self.plyr_dict[plyr].tie_break = hands.four_of_a_kind_finder(hand)
+        elif hands.fullhouse_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 7
+            self.plyr_dict[plyr].tie_break = hands.fullhouse_finder(hand)
+        elif hands.flush_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 6
+            self.plyr_dict[plyr].tie_break = hands.flush_finder(hand)
+        elif hands.straight_finder(handranks_w_ace_as_one):
+            self.plyr_dict[plyr].hand_rank = 5
+            self.plyr_dict[plyr].tie_break = hands.straight_finder(handranks_w_ace_as_one)
+        elif hands.three_of_a_kind_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 4
+            self.plyr_dict[plyr].tie_break = hands.three_of_a_kind_finder(hand)
+        elif hands.two_pair_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 3
+            self.plyr_dict[plyr].tie_break = hands.two_pair_finder(hand)
+        elif hands.one_pair_finder(hand):
+            self.plyr_dict[plyr].hand_rank = 2
+            self.plyr_dict[plyr].tie_break = hands.one_pair_finder(hand)
+        else:
+            self.plyr_dict[plyr].hand_rank = 1
+            self.plyr_dict[plyr].tie_break = hands.highcard_finder(hand)
+
 #     def next_hand(self)
 
 ############ TESTS #################
@@ -318,7 +358,7 @@ class Table():
 #   end_round_hand --> after reward_remaining_player AND after showdown(s) trip sentinel
 # next_hand_prompt?
 
-table = Table(4,1000,20)
+table = Table(2,1000,20)
 for p in table.seat_order:
     table.plyr_dict[p].human = 1
 while(1):

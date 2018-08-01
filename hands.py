@@ -24,50 +24,6 @@ def break_ties(plyr_list, table):
             break
     return winners
 
-# Take a string that is a Player name
-# Assigns hand_rank and tie_break values to the Player object
-# Only makes sense to call when Player has 2 cards and table.community has 5
-def assign_hand_rank(plyr, table):
-    print(table.plyr_dict[plyr].hand)
-    print(table.com_cards)
-    hand = table.plyr_dict[plyr].hand + table.com_cards
-    handranks_w_ace_as_one = []
-    for card in hand:
-        if card[0] == 14:
-            handranks_w_ace_as_one.append(1)
-            handranks_w_ace_as_one.append(14)
-        else:
-            handranks_w_ace_as_one.append(card[0])
-    handranks_w_ace_as_one.sort(reverse=True)
-    if straight_flush_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 9
-        table.plyr_dict[plyr].tie_break = straight_flush_finder(hand)
-    elif four_of_a_kind_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 8
-        table.plyr_dict[plyr].tie_break = four_of_a_kind_finder(hand)
-    elif fullhouse_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 7
-        table.plyr_dict[plyr].tie_break = fullhouse_finder(hand)
-    elif flush_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 6
-        table.plyr_dict[plyr].tie_break = flush_finder(hand)
-    elif straight_finder(handranks_w_ace_as_one):
-        table.plyr_dict[plyr].hand_rank = 5
-        table.plyr_dict[plyr].tie_break = straight_finder(handranks_w_ace_as_one)
-    elif three_of_a_kind_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 4
-        table.plyr_dict[plyr].tie_break = three_of_a_kind_finder(hand)
-    elif two_pair_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 3
-        table.plyr_dict[plyr].tie_break = two_pair_finder(hand)
-    elif one_pair_finder(hand):
-        table.plyr_dict[plyr].hand_rank = 2
-        table.plyr_dict[plyr].tie_break = one_pair_finder(hand)
-    else:
-        table.plyr_dict[plyr].hand_rank = 1
-        table.plyr_dict[plyr].tie_break = highcard_finder(hand)
-
-
 
 def straight_finder(ranks):
     ranks = list(set(ranks))
