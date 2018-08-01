@@ -8,7 +8,7 @@
 # division is changing ints to floats in player.stack or table.pot
 
 
-import player, deck, hands
+import player, deck, hands, helpers
 from random import shuffle
 
 class Table():
@@ -186,10 +186,9 @@ class Table():
                     return True
     
     def skip_all_in_plyr(self):
-        if len(self.left_to_act)>0:
-            plyr = self.left_to_act[0]
-            if self.plyr_dict[plyr].stack == 0:
-                self.left_to_act.remove(plyr)
+        for p in self.seat_order:
+            if self.plyr_dict[p].stack == 0 and p in self.left_to_act:
+                self.left_to_act.remove(p)
     
     def sidepots_check(self):
         for p in self.in_hand:
@@ -200,14 +199,17 @@ class Table():
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
             self.reward_only_player()
+            return 'sentinel'
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
                 if self.sidepots_check() == True:
                     pots_plyrs_list = self.create_sidepots()
                     for pot_plyrs_tup in pots_plyrs_list:
                         self.showdown(pot_plyrs_tup)
+                        return 'sentinel'
                 else:
-                    self.showdown((pot,[self.in_hand[:]]))
+                    self.showdown((self.pot,[self.in_hand[:]]))
+                    return 'sentinel'
                 self.clean_table_after_hand()
             else:
                 assert(self.round in [1,2,3])
@@ -303,19 +305,34 @@ class Table():
             for p in winners:
                 self.plyr_dict[p].stack += amount
 
+#     def next_hand(self)
 
 ############ TESTS #################
+
+# should be
+# deal_hole
+# post_blinds
+# while sentinel:
+#   skip_all_in --> for p in_hand: if p.stack==0: left2act.remove(p)
+#   if len(left2act)>0: get_action, apply_action
+#   end_round_hand --> after reward_remaining_player AND after showdown(s) trip sentinel
+# next_hand_prompt?
 
 table = Table(4,1000,20)
 for p in table.seat_order:
     table.plyr_dict[p].human = 1
-table.deal_hole_cards()
-table.post_blinds()
 while(1):
-    table.skip_all_in_plyr()
-    table.is_round_or_hand_over()
-    plyr = table.left_to_act[0]
-    print(table.get_legal_actions())
-    action = input('input action bet, check, fold, call, raise ')
-    amount = int(input('optional input amount '))
-    table.apply_action(plyr,action,amount)
+    table.deal_hole_cards()
+    table.post_blinds()
+    sentinel = 1
+    while(sentinel):
+        table.skip_all_in_plyr()
+        if len(table.left_to_act) > 0:
+            plyr = table.left_to_act[0]
+            print(table.get_legal_actions())
+            action = input('input action bet, check, fold, call, raise ')
+            amount = int(input('optional input amount '))
+            table.apply_action(plyr,action,amount)
+        if table.is_round_or_hand_over() == 'sentinel':
+            sentinel = 0
+# next_hand()
