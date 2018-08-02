@@ -183,7 +183,8 @@ class Table():
             else:# more than 2 players
                 if player == self.seat_order[2]:
                     return True
-    
+        return False
+
     def skip_all_in_plyr(self):
         for p in self.seat_order:
             if self.plyr_dict[p].stack == 0 and p in self.left_to_act:
@@ -304,7 +305,6 @@ class Table():
             for p in winners:
                 self.plyr_dict[p].stack += amount
 
-    # Take a string that is a Player name
     # Assigns hand_rank and tie_break values to the Player object
     # Only makes sense to call when Player has 2 cards and table.community has 5
     def assign_hand_rank(self, plyr):
@@ -347,32 +347,31 @@ class Table():
 
 #     def next_hand(self)
 
+######### in gui dispatch these ########
+# deal_hole_cards()
+# post_blinds()
+# skip_all_in_plyr()
+# if left2act: get_legal_actions(), present them, apply_action()
+# if is_round_or_hand_over() returns 'sentinel': hand is over
+
 ############ TESTS #################
-
-# should be
-# deal_hole
-# post_blinds
-# while sentinel:
-#   skip_all_in --> for p in_hand: if p.stack==0: left2act.remove(p)
-#   if len(left2act)>0: get_action, apply_action
-#   end_round_hand --> after reward_remaining_player AND after showdown(s) trip sentinel
-# next_hand_prompt?
-
-table = Table(2,1000,20)
-for p in table.seat_order:
-    table.plyr_dict[p].human = 1
-while(1):
-    table.deal_hole_cards()
-    table.post_blinds()
-    sentinel = 1
-    while(sentinel):
-        table.skip_all_in_plyr()
-        if len(table.left_to_act) > 0:
-            plyr = table.left_to_act[0]
-            print(table.get_legal_actions())
-            action = input('input action bet, check, fold, call, raise ')
-            amount = int(input('optional input amount '))
-            table.apply_action(plyr,action,amount)
-        if table.is_round_or_hand_over() == 'sentinel':
-            sentinel = 0
+if __name__=='__main__':
+    table = Table(2,1000,20)
+    for p in table.seat_order:
+        table.plyr_dict[p].human = 1
+    while(1):
+        table.deal_hole_cards()
+        table.post_blinds()
+        sentinel = 1
+        while(sentinel):
+            table.skip_all_in_plyr()
+            if len(table.left_to_act) > 0:
+                plyr = table.left_to_act[0]
+                print(table.get_legal_actions())
+                action = input('input action bet, check, fold, call, raise ')
+                amount = int(input('optional input amount '))
+                table.apply_action(plyr,action,amount)
+            if table.is_round_or_hand_over() == 'sentinel':
+                sentinel = 0
+    table.move_button_remove_chipless_players()
 # next_hand()

@@ -1,6 +1,7 @@
 import table
 import tkinter as tk
 from PIL import Image, ImageTk
+import sys
 
 
 class Player_window(tk.Frame):
@@ -10,7 +11,7 @@ class Player_window(tk.Frame):
         self.playerImage = ImageTk.PhotoImage(tmpImage)
         self.playerImg = tk.Label(self,image=self.playerImage,bg='black')
         self.playerImg.pack(side='left')
-        self.plyrMsg = tk.Label(self,text='Welcome to Poker',bg='black',fg='wheat3')
+        self.plyrMsg = tk.Label(self,text='Welcome to Poker',bg='black',fg='maroon')
         self.plyrMsg.pack()
         self.card1 = tk.Label(self,image=None,bg='black')
         self.card1.pack(side='left')
@@ -56,19 +57,6 @@ class Player_window(tk.Frame):
 
 # this populates the player area with current player info
     def populate(self):
-        # skip player if all-in
-        # WORKING HERE list index out of range error
-        print(room.table.playerDict, ' is playerDict')
-        print(room.table.leftToAct, ' is leftToAct')
-        if room.table.leftToAct != []:
-            if room.table.playerDict[room.table.leftToAct[0]].stackSize == 0:
-                room.table.leftToAct.remove(room.table.leftToAct[0])
-                if room.table.leftToAct == []:
-                    self.endRound()
-                else:
-                    # memory leak? nextPlayer calls populate until?
-                    self.nextPlayer()
-        # end skip player if all in
         plyr = room.table.leftToAct[0]
         # WORKING
         # IF PLAYER IS BOT
@@ -99,11 +87,8 @@ class Player_window(tk.Frame):
             else:
                 self.createCallButtons(plyr)
         
-    # these call underlying table methods
-    # then nextPlayer()|endRound()
-    
-    def call(self,currentPlyr):
-        room.table.call(currentPlyr)
+    def call(self,plyr):
+        room.table.call(plyr)
         room.tableWindow.updateTableChips()
         self.destroyButtons()
         if room.table.leftToAct != []:
@@ -112,12 +97,12 @@ class Player_window(tk.Frame):
             self.endRound()
         
     # note Raise instead of raise
-    def Raise(self,currentPlyr,amount=0):
+    def Raise(self,plyr,amount=0):
         try:
             amount = self.wagerEntry.get()
         except:
             pass
-        room.table.Raise(currentPlyr,amount)
+        room.table.Raise(plyr,amount)
         room.tableWindow.updateTableChips()
         self.destroyButtons()
         if room.table.leftToAct != []:
@@ -125,8 +110,8 @@ class Player_window(tk.Frame):
         else:
             self.endRound()
         
-    def fold(self,currentPlyr):
-        room.table.fold(currentPlyr)
+    def fold(self,plyr):
+        room.table.fold(plyr)
         room.tableWindow.updateTableChips()
         room.imageList[currentPlyr].c1.configure(image=room.noCard)
         room.imageList[currentPlyr].c2.configure(image=room.noCard)
@@ -136,12 +121,12 @@ class Player_window(tk.Frame):
         else:
             self.endRound()
         
-    def bet(self,currentPlyr,amount=0):
+    def bet(self,plyr,amount=0):
         try:
             amount = self.wagerEntry.get()
         except:
             pass
-        room.table.bet(currentPlyr,amount)
+        room.table.bet(plyr,amount)
         room.tableWindow.updateTableChips()
         self.destroyButtons()
         if room.table.leftToAct != []:
@@ -149,8 +134,8 @@ class Player_window(tk.Frame):
         else:
             self.endRound()
     
-    def check(self,currentPlyr):
-        room.table.check(currentPlyr)
+    def check(self,plyr):
+        room.table.check(plyr)
         room.tableWindow.updateTableChips()
         self.destroyButtons()
         if room.table.leftToAct != []:
@@ -158,16 +143,16 @@ class Player_window(tk.Frame):
         else:
             self.endRound()
             
-#     def destroyButtons(self):
-#         try:
-#             self.b1.destroy()
-#             self.b2.destroy()
-#             self.b3.destroy()
-#             self.wagerEntry.destroy()
-#             self.card1.configure(image=None)
-#             self.card2.configure(image=None)
-#         except:
-#             pass
+    def destroyButtons(self):
+        try:
+            self.b1.destroy()
+            self.b2.destroy()
+            self.b3.destroy()
+            self.wagerEntry.destroy()
+            self.card1.configure(image=None)
+            self.card2.configure(image=None)
+        except:
+            pass
     
     
 class Left_panel_buttons(tk.Frame):
