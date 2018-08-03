@@ -19,7 +19,7 @@ class Player_window(tk.Frame):
         self.card2.pack(side='left')
         
     # dispatch self.check(),self.bet(),self.fold()
-    def createCheckButtons(self,plyr):
+    def create_check_buttons(self,plyr):
         self.b1 =  tk.Button(self,text='Check',highlightbackground='black',font=('Helvetica',16),command=lambda:self.check(plyr))
         self.b1.pack(side='left')
         self.b2 = tk.Button(self,text='Bet',highlightbackground='black',font=('Helvetica',16),command=lambda:self.bet(plyr))
@@ -30,7 +30,7 @@ class Player_window(tk.Frame):
         self.b3.pack(side='left')
         
     # dispatch self.call(),self.Raise(),self.fold()
-    def createCallButtons(self,plyr):
+    def create_call_buttons(self,plyr):
         self.b1 = tk.Button(self,text='Call '+str(min(room.table.playerDict[plyr].stackSize,room.table.costToPlay-room.table.playerDict[plyr].inFront)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
         self.b1.pack(side='left')
         # player cannot raise if only enough to call, do not create the button
@@ -42,13 +42,14 @@ class Player_window(tk.Frame):
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
-    def createCurrentPlayerImage(self,plyr):
+    def create_currentplyr_image(self,plyr):
         self.plyrMsg.configure(text='What will '+plyr+' do?')
         self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[0]+'.gif'))
         self.card1.configure(image=self.cardimg1)
         self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[1]+'.gif'))
         self.card2.configure(image=self.cardimg2)
         
+    # subsume into above
     def createBotPlayerImage(self,plyr):
         self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
         # WORKING HERE
@@ -56,7 +57,8 @@ class Player_window(tk.Frame):
         self.card2.configure(image=room.cardBack)
 
 # this populates the player area with current player info
-    def populate(self):
+# input is player string and repr of legal player options (
+    def populate(self, plyr, options):
         plyr = room.table.leftToAct[0]
         # WORKING
         # IF PLAYER IS BOT
@@ -212,7 +214,15 @@ class Left_panel_buttons(tk.Frame):
 #         room.tableWindow.updateTableChips()
         
     # calls populate() to get the first action, called by self.gtActn button
-    def getAction(self):
+    def get_action(self):
+        player,options = room.table.get_legal_options()
+        if options == 'check_options':
+            room.player_window.populate(
+            self.create_check_buttons()
+        elif options == 'call_options':
+            self.create_call_buttons()
+        elif options == 'bb_options':
+            self.create_bb_option_buttons()
         room.playerWindow.populate()
         
     # reveal each player's hand, called by self.shwHands button

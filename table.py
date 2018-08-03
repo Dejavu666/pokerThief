@@ -1,5 +1,7 @@
 
-# TO DO 
+# TO DO
+
+# note, NOT provably correct because input parameters are derived from state (dynamic not static)
 
 # If player runs out of chips remove from seat_order/in_hand AFTER hand is resolved
 # Test create_sidepots() with edge cases
@@ -215,22 +217,25 @@ class Table():
                 assert(self.round in [1,2,3])
                 self.advance_round()
     
+    # pass all legal options for next-to-act player to gui
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
         # special BB options
         if self.is_bb_option_avail(plyr) == True:
-            acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
-                    ('check'),\
-                    ('fold'))
+            return 'bb_options'
+#             acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
+#                     ('check'),\
+#                     ('fold'))
         elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
-            acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
-                    ('check'),\
-                    ('fold'))
+            return 'check_options'
+#             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
+#                     ('check'),\
+#                     ('fold'))
         else:
-            acts = (('raise',(min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round)),\
-            ('call',(min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round))),\
-            ('fold'))
-        return acts
+            return 'call_options'
+#             acts = (('raise',(min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round)),\
+#             ('call',(min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round))),\
+#             ('fold'))
         
     def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]
