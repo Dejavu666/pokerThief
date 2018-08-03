@@ -169,20 +169,20 @@ class Left_panel_buttons(tk.Frame):
         self.bg.pack(fill=tk.BOTH, expand=tk.YES)
         
         # Press to move dealer button, eliminates any busted players
-        self.moveButton = tk.Button(self.bg,takefocus=1, text='Move Button',highlightbackground='darkred',command=self.moveButton)
-        self.moveButton.pack()
+        self.move_button_b = tk.Button(self.bg,takefocus=1, text='Move Button',highlightbackground='darkred',command=self.move_dlr_button)
+        self.move_button_b.pack()
         
         # Press to deal 2 cards to all players
-        self.deal = tk.Button(self.bg,takefocus=1, text='Deal Cards',highlightbackground='darkred',command=self.dealCards)
-        self.deal.pack()
+        self.deal_hole_b = tk.Button(self.bg,takefocus=1, text='Deal Cards',highlightbackground='darkred',command=self.deal_cards)
+        self.deal_hole_b.pack()
         
         # Press to post blinds
-        self.pstBlnds = tk.Button(self.bg,takefocus=1, text='Post Blinds',highlightbackground='darkred',command=self.postBlinds)
-        self.pstBlnds.pack()
+        self.post_blinds_b = tk.Button(self.bg,takefocus=1, text='Post Blinds',highlightbackground='darkred',command=self.post_blinds)
+        self.post_blinds_b.pack()
         
         # Press to start hand, get first action from player
-        self.gtActn = tk.Button(self.bg,takefocus=1,text='Get Action',highlightbackground='darkred',command=self.getAction)
-        self.gtActn.pack()
+        self.get_action_b = tk.Button(self.bg,takefocus=1,text='Get Action',highlightbackground='darkred',command=self.get_action)
+        self.get_action_b.pack()
         
         # Press to reveal all hands
 #         self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.showHands)
@@ -192,9 +192,9 @@ class Left_panel_buttons(tk.Frame):
 #         self.clnUp = tk.Button(self.bg,text='Clean',highlightbackground='darkred',command=self.cleanUp)
 #         self.clnUp.pack()
         
-    # move dealer button and eliminate busted players, called by self.moveButton button
-    def moveButton(self):
-        room.table.moveButton()
+    # move dealer button and eliminate busted players, called by self.move_button_b
+    def move_dlr_button(self):
+        room.table.move_button()
         room.imageList[room.table.playerOrder[-1]].dealerButton.configure(text='')
         room.imageList[room.table.playerOrder[0]].dealerButton.configure(text='Dealer')
         for plyr in room.table.playerOrder[:]:
@@ -202,28 +202,29 @@ class Left_panel_buttons(tk.Frame):
                 room.tableWindow.deletePlayer(plyr)
                 
     # deals 2 cards to all players, called by self.deal button
-    def dealCards(self):
-        room.table.dealCards()
-        for plyr in room.table.playerOrder:
+    def deal_cards(self):
+        room.table.deal_hole_cards()
+        for plyr in room.table.player_order:
             room.imageList[plyr].c1.configure(image=room.cardBack)
             room.imageList[plyr].c2.configure(image=room.cardBack)
                 
     # post blinds, called by self.pstBlinds button
-    def postBlinds(self):
+    def post_blinds(self):
         room.table.post_blinds()
 #         room.tableWindow.updateTableChips()
         
     # calls populate() to get the first action, called by self.gtActn button
     def get_action(self):
-        player,options = room.table.get_legal_options()
+        options = room.table.get_legal_actions()
+        print(options)
         if options == 'check_options':
-            room.player_window.populate(
-            self.create_check_buttons()
+            room.player_window.populate()
+            room.player_window.create_check_buttons()
         elif options == 'call_options':
-            self.create_call_buttons()
+            room.player_window.create_call_buttons()
         elif options == 'bb_options':
-            self.create_bb_option_buttons()
-        room.playerWindow.populate()
+            room.player_window.create_bb_option_buttons()
+        room.player_window.populate()
         
     # reveal each player's hand, called by self.shwHands button
 #     def showHands(self,event=None):
