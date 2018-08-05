@@ -59,10 +59,7 @@ class Player_window(tk.Frame):
 # this populates the player area with current player info
 # input is player string and repr of legal player options (
     def populate(self, plyr, options):
-        plyr = room.table.leftToAct[0]
-        # WORKING
-        # IF PLAYER IS BOT
-        if room.table.playerDict[plyr].human == 0:
+        if room.table.plyr_dict[plyr].human == 0:
             self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
             self.createBotPlayerImage(plyr)
             # If pot is open
@@ -83,11 +80,11 @@ class Player_window(tk.Frame):
                 else:
                     self.fold(plyr)
         else:# actions for human user
-            self.createCurrentPlayerImage(plyr)
-            if room.table.playerDict[plyr].inFront == room.table.costToPlay:
-                self.createCheckButtons(plyr)
+            self.create_current_plyr_image(plyr)
+            if options == 'check_options':
+                self.create_check_buttons(plyr)
             else:
-                self.createCallButtons(plyr)
+                self.create_call_buttons(plyr)
         
     def call(self,plyr):
         room.table.call(plyr)
@@ -204,7 +201,7 @@ class Left_panel_buttons(tk.Frame):
     # deals 2 cards to all players, called by self.deal button
     def deal_cards(self):
         room.table.deal_hole_cards()
-        for plyr in room.table.player_order:
+        for plyr in room.table.seat_order:
             room.imageList[plyr].c1.configure(image=room.cardBack)
             room.imageList[plyr].c2.configure(image=room.cardBack)
                 
@@ -218,14 +215,7 @@ class Left_panel_buttons(tk.Frame):
         opts_plyr = room.table.get_legal_actions()
         options = opts_plyr[0]
         plyr = opts_plyr[1]
-        if options == 'check_options':
-            room.player_window.populate()
-            room.player_window.create_check_buttons(plyr)
-        elif options == 'call_options':
-            room.player_window.create_call_buttons(plyr)
-        elif options == 'bb_options':
-            room.player_window.create_bb_option_buttons(plyr)
-        room.player_window.populate()
+        room.player_window.populate(plyr, options)
         
     # reveal each player's hand, called by self.shwHands button
 #     def showHands(self,event=None):

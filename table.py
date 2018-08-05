@@ -227,7 +227,7 @@ class Table():
 #                     ('check'),\
 #                     ('fold'))
         elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
-            return ('check_options', plyr)
+            return (('check_options',('bet',min(self.plyr_dict.stack), plyr)
 #             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
 #                     ('check'),\
 #                     ('fold'))
