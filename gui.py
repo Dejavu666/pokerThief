@@ -31,13 +31,13 @@ class Player_window(tk.Frame):
         
     # dispatch self.call(),self.Raise(),self.fold()
     def create_call_buttons(self,plyr):
-        self.b1 = tk.Button(self,text='Call '+str(min(room.table.playerDict[plyr].stackSize,room.table.costToPlay-room.table.playerDict[plyr].inFront)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
+        self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
         self.b1.pack(side='left')
         # player cannot raise if only enough to call, do not create the button
-        if room.table.playerDict[plyr].stackSize > room.table.costToPlay-room.table.playerDict[plyr].inFront:
+        if room.table.plyr_dict[plyr].stack > room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round:
             self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
             self.b2.pack(side='left')
-            self.wagerEntry = tk.Scale(self,from_=min(room.table.playerDict[plyr].stackSize-room.table.costToPlay+room.table.playerDict[plyr].inFront,room.table.minBet),to=min(room.table.playerDict[plyr].stackSize,room.table.playerDict[plyr].stackSize-room.table.costToPlay+room.table.playerDict[plyr].inFront),orient='horizontal',resolution=10,bg='black',fg='wheat3')
+            self.wagerEntry = tk.Scale(self,from_=min(room.table.plyr_dict[plyr].stack-room.table.cost_to_play+room.table.plyr_dict[plyr].chips_this_round,room.table.min_bet),to=min(room.table.plyr_dict[plyr].stack,room.table.plyr_dict[plyr].stack-room.table.cost_to_play+room.table.plyr_dict[plyr].chips_this_round),orient='horizontal',resolution=10,bg='black',fg='wheat3')
             self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
@@ -215,15 +215,16 @@ class Left_panel_buttons(tk.Frame):
         
     # calls populate() to get the first action, called by self.gtActn button
     def get_action(self):
-        options = room.table.get_legal_actions()
-        print(options)
+        opts_plyr = room.table.get_legal_actions()
+        options = opts_plyr[0]
+        plyr = opts_plyr[1]
         if options == 'check_options':
             room.player_window.populate()
-            room.player_window.create_check_buttons()
+            room.player_window.create_check_buttons(plyr)
         elif options == 'call_options':
-            room.player_window.create_call_buttons()
+            room.player_window.create_call_buttons(plyr)
         elif options == 'bb_options':
-            room.player_window.create_bb_option_buttons()
+            room.player_window.create_bb_option_buttons(plyr)
         room.player_window.populate()
         
     # reveal each player's hand, called by self.shwHands button
@@ -277,15 +278,15 @@ class Table_window(tk.Frame):
         self.background.pack(fill=tk.BOTH, expand=tk.YES)
         
     # initialize pot and community cards gui area
-    def createChipImages(self):
-        self.chipFrame = tk.Frame(self.background,bg='black',relief='groove',bd=4)
-        self.numFrame = tk.Frame(self.chipFrame,bg='black',relief='raised',bd=3)
+    def create_chip_images(self):
+        self.chip_frame = tk.Frame(self.background,bg='black',relief='groove',bd=4)
+        self.num_frame = tk.Frame(self.chipFrame,bg='black',relief='raised',bd=3)
         self.chips = tk.Label(self.numFrame,text=0,font=('Helvetica',22),bg='black',fg='wheat3')
         self.chips.pack(side='top')
-        self.chipImage = tk.Label(self.numFrame,image=room.chips,bg='black')
-        self.chipImage.pack(side='top')
-        self.numFrame.pack(side='left')
-        self.chipFrame.grid(row=2,column=1,columnspan=2)
+        self.chip_img = tk.Label(self.numFrame,image=room.chips,bg='black')
+        self.chip_img.pack(side='top')
+        self.num_frame.pack(side='left')
+        self.chip_frame.grid(row=2,column=1,columnspan=2)
         self.card1 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
         self.card1.pack(side='left')
         self.card2 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
@@ -298,13 +299,13 @@ class Table_window(tk.Frame):
         self.card5.pack(side='left')
         
     # called after player decisions, update all player chips and pot chip amount
-    def updateTableChips(self):
+    def update_table_chips(self):
         self.chips.configure(text=room.table.pot)
         for plyr in room.table.playerOrder:
             room.imageList[plyr].stack.configure(text=room.table.playerDict[plyr].stackSize)
         
     # get and reveal gui images of dealt cards
-    def dealFlop(self):
+    def deal_flop(self):
         self.card1img = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.cardsInPlay[0]+'.gif'))
         self.card1.configure(image=self.card1img)
         self.card2img = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.cardsInPlay[1]+'.gif'))
@@ -312,11 +313,11 @@ class Table_window(tk.Frame):
         self.card3img = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.cardsInPlay[2]+'.gif'))
         self.card3.configure(image=self.card3img)
         
-    def dealTurn(self):
+    def deal_turn(self):
         self.card4img = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.cardsInPlay[3]+'.gif'))
         self.card4.configure(image=self.card4img)
         
-    def dealRiver(self):
+    def deal_river(self):
         self.card5img = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.cardsInPlay[4]+'.gif'))
         self.card5.configure(image=self.card5img)
         
@@ -324,7 +325,7 @@ class Table_window(tk.Frame):
     # reference the IMAGES on each players window like so:
     # room.imageList['player1'].stack, .c1 (card1), .c2 (card2)
     # create grid layout depending on number of players
-    def createPlayerImages(self,plyrOrder):
+    def create_player_images(self,plyrOrder):
         room.imageList = {}
         row = 1
         column = 1

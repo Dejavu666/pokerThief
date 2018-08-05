@@ -222,17 +222,17 @@ class Table():
         plyr = self.left_to_act[0]
         # special BB options
         if self.is_bb_option_avail(plyr) == True:
-            return 'bb_options'
+            return ('bb_options', plyr)
 #             acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
 #                     ('check'),\
 #                     ('fold'))
         elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
-            return 'check_options'
+            return ('check_options', plyr)
 #             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
 #                     ('check'),\
 #                     ('fold'))
         else:
-            return 'call_options'
+            return ('call_options', plyr)
 #             acts = (('raise',(min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round)),\
 #             ('call',(min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round))),\
 #             ('fold'))
