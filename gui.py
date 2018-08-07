@@ -24,7 +24,7 @@ class Player_window(tk.Frame):
         self.b1.pack(side='left')
         self.b2 = tk.Button(self,text='Bet',highlightbackground='black',font=('Helvetica',16),command=lambda:self.bet(plyr))
         self.b2.pack(side='left')
-        self.wagerEntry = tk.Scale(self,from_=min(room.table.playerDict[plyr].stackSize,room.table.minBet),to=room.table.playerDict[plyr].stackSize,orient='horizontal',resolution=10,bg='black',fg='wheat3')
+        self.wagerEntry = tk.Scale(self,from_=min(room.table.plyr_dict[plyr].stack,room.table.minBet),to=room.table.plyr_dict[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
         self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
@@ -42,11 +42,12 @@ class Player_window(tk.Frame):
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
-    def create_currentplyr_image(self,plyr):
+    def create_current_plyr_image(self,plyr):
         self.plyrMsg.configure(text='What will '+plyr+' do?')
-        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[0]+'.gif'))
+        print(room.table.plyr_dict[plyr].hand)
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+''.join(room.table.plyr_dict[plyr].hand[0])+'.gif'))
         self.card1.configure(image=self.cardimg1)
-        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.playerDict[plyr].hand[1]+'.gif'))
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+''.join(room.table.plyr_dict[plyr].hand[1])+'.gif'))
         self.card2.configure(image=self.cardimg2)
         
     # subsume into above
@@ -56,23 +57,23 @@ class Player_window(tk.Frame):
         self.card1.configure(image=room.cardBack)
         self.card2.configure(image=room.cardBack)
 
-# this populates the player area with current player info
-# input is player string and repr of legal player options (
+# this populates the player_window (bottom window) with current player info
+# input is player string and repr of legal player options (options[0],optio
     def populate(self, plyr, options):
         if room.table.plyr_dict[plyr].human == 0:
             self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
             self.createBotPlayerImage(plyr)
             # If pot is open
-            if room.table.playerDict[plyr].inFront == room.table.costToPlay:
+            if room.table.plyr_dict[plyr].inFront == room.table.costToPlay:
                 # do i need to pass the table object or can i refer to it from bot/player instance?
-                botAction, maybeAmount = room.table.playerDict[plyr].getRandomCheckAction(plyr,room.table)
+                botAction, maybeAmount = room.table.plyr_dict[plyr].getRandomCheckAction(plyr,room.table)
                 if botAction == 'check':
                     self.check(plyr)
                 else:
                     self.bet(plyr,maybeAmount)
             # pot is not open
             else:
-                botAction, maybeAmount = room.table.playerDict[plyr].getRandomCallAction(plyr,room.table)
+                botAction, maybeAmount = room.table.plyr_dict[plyr].getRandomCallAction(plyr,room.table)
                 if botAction == 'call':
                     self.call(plyr)
                 elif botAction == 'raise':
@@ -80,6 +81,7 @@ class Player_window(tk.Frame):
                 else:
                     self.fold(plyr)
         else:# actions for human user
+            print(options)
             self.create_current_plyr_image(plyr)
             if options == 'check_options':
                 self.create_check_buttons(plyr)
@@ -195,15 +197,15 @@ class Left_panel_buttons(tk.Frame):
         room.imageList[room.table.playerOrder[-1]].dealerButton.configure(text='')
         room.imageList[room.table.playerOrder[0]].dealerButton.configure(text='Dealer')
         for plyr in room.table.playerOrder[:]:
-            if room.table.playerDict[plyr].stackSize == 0:
+            if room.table.plyr_dict[plyr].stack == 0:
                 room.tableWindow.deletePlayer(plyr)
                 
     # deals 2 cards to all players, called by self.deal button
     def deal_cards(self):
         room.table.deal_hole_cards()
         for plyr in room.table.seat_order:
-            room.imageList[plyr].c1.configure(image=room.cardBack)
-            room.imageList[plyr].c2.configure(image=room.cardBack)
+            room.imageList[plyr].c1.configure(image=room.card_back)
+            room.imageList[plyr].c2.configure(image=room.card_back)
                 
     # post blinds, called by self.pstBlinds button
     def post_blinds(self):
@@ -213,17 +215,18 @@ class Left_panel_buttons(tk.Frame):
     # calls populate() to get the first action, called by self.gtActn button
     def get_action(self):
         opts_plyr = room.table.get_legal_actions()
+        print(opts_plyr)
         options = opts_plyr[0]
-        plyr = opts_plyr[1]
+        plyr = opts_plyr[-1]
         room.player_window.populate(plyr, options)
         
     # reveal each player's hand, called by self.shwHands button
 #     def showHands(self,event=None):
 #         for plyr in room.table.playerOrder:
-#             if room.table.playerDict[plyr].hand != []:
-#                 room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[0]+'.gif'))
+#             if room.table.plyr_dict[plyr].hand != []:
+#                 room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.plyr_dict[plyr].hand[0]+'.gif'))
 #                 room.imageList[plyr].c1.configure(image=room.imageList[plyr].img1)
-#                 room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.playerDict[plyr].hand[1]+'.gif'))
+#                 room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('cardImages/'+room.table.plyr_dict[plyr].hand[1]+'.gif'))
 #                 room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
             
     # reset, called by self.clnUp button
@@ -270,29 +273,29 @@ class Table_window(tk.Frame):
     # initialize pot and community cards gui area
     def create_chip_images(self):
         self.chip_frame = tk.Frame(self.background,bg='black',relief='groove',bd=4)
-        self.num_frame = tk.Frame(self.chipFrame,bg='black',relief='raised',bd=3)
-        self.chips = tk.Label(self.numFrame,text=0,font=('Helvetica',22),bg='black',fg='wheat3')
+        self.num_frame = tk.Frame(self.chip_frame,bg='black',relief='raised',bd=3)
+        self.chips = tk.Label(self.num_frame,text=0,font=('Helvetica',22),bg='black',fg='wheat3')
         self.chips.pack(side='top')
-        self.chip_img = tk.Label(self.numFrame,image=room.chips,bg='black')
+        self.chip_img = tk.Label(self.num_frame,image=room.chips,bg='black')
         self.chip_img.pack(side='top')
         self.num_frame.pack(side='left')
         self.chip_frame.grid(row=2,column=1,columnspan=2)
-        self.card1 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
+        self.card1 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card1.pack(side='left')
-        self.card2 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
+        self.card2 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card2.pack(side='left')
-        self.card3 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
+        self.card3 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card3.pack(side='left')
-        self.card4 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
+        self.card4 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card4.pack(side='left')
-        self.card5 = tk.Label(self.chipFrame,image=room.noCard,bg='black')
+        self.card5 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card5.pack(side='left')
         
     # called after player decisions, update all player chips and pot chip amount
     def update_table_chips(self):
         self.chips.configure(text=room.table.pot)
         for plyr in room.table.playerOrder:
-            room.imageList[plyr].stack.configure(text=room.table.playerDict[plyr].stackSize)
+            room.imageList[plyr].stack.configure(text=room.table.plyr_dict[plyr].stack)
         
     # get and reveal gui images of dealt cards
     def deal_flop(self):
@@ -323,19 +326,19 @@ class Table_window(tk.Frame):
         for plyr in plyrOrder:
             self.w = tk.Frame(self.background,relief='ridge',bd=4,background='black')
             self.w.info = tk.Frame(self.w,relief='ridge',bd=3,background='black')
-            self.w.plyrImg = ImageTk.PhotoImage(Image.open('cardImages/playerImage.gif').resize((60,50)))
+            self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/playerImage.gif').resize((60,50)))
             self.w.pic = tk.Label(self.w.info,image=self.w.plyrImg,bg='black')
             self.w.pic.pack(side='left')
             self.w.player = tk.Label(self.w.info,text=plyr,fg='wheat3',bg='black')
             self.w.player.pack(side='top')
-            self.w.stack = tk.Label(self.w.info,text=room.table.playerDict[plyr].stackSize,bg='black',fg='wheat3')
+            self.w.stack = tk.Label(self.w.info,text=room.table.plyr_dict[plyr].stack,bg='black',fg='wheat3')
             self.w.stack.pack(side='top')
             self.w.dealerButton = tk.Label(self.w.info,text = '',fg='wheat3',bg='black')
             self.w.dealerButton.pack(side='top')
             self.w.info.pack(side='top')
-            self.w.c1 = tk.Label(self.w,image=room.noCard,background='black')
+            self.w.c1 = tk.Label(self.w,image=room.no_card,background='black')
             self.w.c1.pack(side='left')
-            self.w.c2 = tk.Label(self.w,image=room.noCard,background='black')
+            self.w.c2 = tk.Label(self.w,image=room.no_card,background='black')
             self.w.c2.pack(side='left')
             self.w.grid(row=row,column=column,padx=25,pady=4)
             room.imageList[plyr] = self.w
@@ -358,7 +361,7 @@ class Table_window(tk.Frame):
             elif counter == 9:
                 column = 1
                 row = 3
-        room.imageList[room.table.playerOrder[0]].dealerButton.configure(text='Dealer')
+        room.imageList[room.table.seat_order[0]].dealerButton.configure(text='Dealer')
             
     def deletePlayer(self,plyr):
         room.table.deletePlayer(plyr)
@@ -368,16 +371,16 @@ class Table_window(tk.Frame):
     def clean(self):
         room.table.clean()
         for plyr in room.table.playerOrder:
-            room.imageList[plyr].c1.configure(image=room.noCard)
-            room.imageList[plyr].c2.configure(image=room.noCard)
-        self.card1.configure(image=room.noCard)
-        self.card2.configure(image=room.noCard)
-        self.card3.configure(image=room.noCard)
-        self.card4.configure(image=room.noCard)
-        self.card5.configure(image=room.noCard)
+            room.imageList[plyr].c1.configure(image=room.no_card)
+            room.imageList[plyr].c2.configure(image=room.no_card)
+        self.card1.configure(image=room.no_card)
+        self.card2.configure(image=room.no_card)
+        self.card3.configure(image=room.no_card)
+        self.card4.configure(image=room.no_card)
+        self.card5.configure(image=room.no_card)
         self.updateTableChips()
-        room.playerWindow.card1.configure(image=room.noCard)
-        room.playerWindow.card2.configure(image=room.noCard)
+        room.playerWindow.card1.configure(image=room.no_card)
+        room.playerWindow.card2.configure(image=room.no_card)
         room.playerWindow.plyrMsg.configure(text='')
         room.playerWindow.b1.destroy()
         room.playerWindow.b2.destroy()
@@ -409,8 +412,8 @@ class QuitGamePopup(object):
         sys.exit()
 
 # still need to round down to closest factor of 20
-# gets input from user numPlayers,stackSize,bigBlind 
-# stored as room.numberOfPlayers,room.stackSize,room.bigBlindSize
+# gets input from user numPlayers,stack_size,bigBlind 
+# stored as room.num_plyrs,room.stack_size,room.bb_size
 class StartGamePopup(object):
     def __init__(self,root):
         self.top = tk.Toplevel(root,bg='black',relief='ridge',bd=4)
@@ -420,13 +423,13 @@ class StartGamePopup(object):
         self.players.pack()
         self.playersEntry = tk.Scale(self.top,relief='raised',from_=2,to=9,orient='horizontal',bg='black',fg='red')
         self.playersEntry.pack()
-        self.stackSize = tk.Label(self.top,bg='black',fg='maroon',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
-        self.stackSize.pack()
-        self.stackSizeEntry = tk.Scale(self.top,relief='raised',from_=200,to=10000,length=300,orient='horizontal',bg='black',fg='red',resolution=10,command=lambda x: self.bigBlindEntry.config(to=(self.stackSizeEntry.get()//10)))#need to round down to factor20 here
-        self.stackSizeEntry.pack() 
+        self.stack_size = tk.Label(self.top,bg='black',fg='maroon',text="What is the starting stack size?\nIncrements of 10, at least 100",font=('Courier bold',26))
+        self.stack_size.pack()
+        self.stack_sizeEntry = tk.Scale(self.top,relief='raised',from_=200,to=10000,length=300,orient='horizontal',bg='black',fg='red',resolution=10,command=lambda x: self.bigBlindEntry.config(to=(self.stack_sizeEntry.get()//10)))#need to round down to factor20 here
+        self.stack_sizeEntry.pack() 
         self.bigBlind = tk.Label(self.top,bg='black',fg='maroon',text="What is the big blind value?\nIncrements of 20,\n at most, ten percent of stack size",font=('Courier bold',26))
         self.bigBlind.pack()
-        self.bigBlindEntry = tk.Scale(self.top,relief='raised',from_=20,to=self.stackSizeEntry.get(),resolution=20,orient='horizontal',fg='red',bg='black')
+        self.bigBlindEntry = tk.Scale(self.top,relief='raised',from_=20,to=self.stack_sizeEntry.get(),resolution=20,orient='horizontal',fg='red',bg='black')
         self.bigBlindEntry.pack()
         self.b=tk.Button(self.top,bg='black',highlightbackground='maroon',relief='raised',text='Ok',fg='maroon',font=("Helvetica bold italic",26)\
        ,takefocus=1,command=self.start_game)
@@ -434,16 +437,14 @@ class StartGamePopup(object):
     
     # When 'OK' is pressed after 'Start Game'
     def start_game(self):
-        room.numberOfPlayers = self.playersEntry.get()
-        room.stackSize = self.stackSizeEntry.get()
-        room.bigBlindSize = self.bigBlindEntry.get()
-        room.table = table.Table(big_blind=room.bigBlindSize,num_players=room.numberOfPlayers,num_chips=room.stackSize)
-        plyrList = []
-        for x in range(room.numberOfPlayers):
-            plyrList.append('player'+str(x+1))
+        room.num_plyrs = self.playersEntry.get()
+        room.stack_size = self.stack_sizeEntry.get()
+        room.bb_size = self.bigBlindEntry.get()
+        room.table = table.Table(big_blind=room.bb_size,num_players=room.num_plyrs,num_chips=room.stack_size)
+        plyrList = ['player'+str(x+1) for x in range(room.num_plyrs)]
         self.top.destroy()
-#         room.tableWindow.createPlayerImages(room.table.playerOrder)
-#         room.tableWindow.createChipImages()
+        room.table_window.create_player_images(room.table.seat_order)
+        room.table_window.create_chip_images()
         
 
 # just a geometry organizer for other classes
@@ -461,9 +462,9 @@ class Main_application(tk.Frame):
         self.start_game_bar.pack(side="top", fill="x")
         self.table_window.pack(side="right", fill="both", expand=True)
         # constant image references held in class that inherits from TK root
-#         self.cardBack = ImageTk.PhotoImage(Image.open('cardImages/cardBack.gif'))
-#         self.noCard = ImageTk.PhotoImage(Image.open('cardImages/noCard.gif'))
-#         self.chips = ImageTk.PhotoImage(Image.open('cardImages/chips.gif'))
+        self.card_back = ImageTk.PhotoImage(Image.open('res/cardBack.gif'))
+        self.no_card = ImageTk.PhotoImage(Image.open('res/noCard.gif'))
+        self.chips = ImageTk.PhotoImage(Image.open('res/chips.gif'))
         
 
 root = tk.Tk()

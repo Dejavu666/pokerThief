@@ -1,5 +1,9 @@
+# 1) instantiate table object
+# 2) should only interface with table object through get_legal_action(), apply_action() (eventually)
 
 # TO DO
+
+# scenario where player has more than call amount but less than legal raise (am i covering the parameters in 'call' correctly?)
 
 # note, NOT provably correct because input parameters are derived from state (dynamic not static)
 
@@ -217,25 +221,23 @@ class Table():
                 assert(self.round in [1,2,3])
                 self.advance_round()
     
-    # pass all legal options for next-to-act player to gui
+    # Returns legal actions of next player left to act
+    # should maybe skip all-in here
     def get_legal_actions(self):
         plyr = self.left_to_act[0]
-        # special BB options
+        # Special BB options
         if self.is_bb_option_avail(plyr) == True:
-            return ('bb_options', plyr)
-#             acts = (('raise',(min(self.min_bet,self.plyr_dict[plyr].stack),self.plyr_dict[plyr].stack)),\
-#                     ('check'),\
-#                     ('fold'))
+            return ('bb_options',('raise',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack),\
+            ('check'),('fold'), plyr)
+        # Check Bet Fold, table is open
         elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
-            return (('check_options',('bet',min(self.plyr_dict.stack), plyr)
-#             acts = (('bet',(min(self.plyr_dict[plyr].stack, self.min_bet),self.plyr_dict[plyr].stack)),\
-#                     ('check'),\
-#                     ('fold'))
+            return ('check_options',('bet',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack),\
+            ('check'), ('fold'), plyr)
+        # Call Raise Fold, table is bet
         else:
-            return ('call_options', plyr)
-#             acts = (('raise',(min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round)),\
-#             ('call',(min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round))),\
-#             ('fold'))
+            return ('call_options',('call',min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round)),\
+             ('raise',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round),\
+             ('fold'), plyr)
         
     def apply_action(self, player, action, amount=0):
         player = self.left_to_act[0]

@@ -12,7 +12,7 @@ class Player():
         # tracks how much player has contributed to a pot, reset every hand
         self.chips_in_pot = 0
         # signify if instance is human or computer
-        self.human = 0
+        self.human = 1
 
     def draw_card(self,card):
         self.hand.append(card)
