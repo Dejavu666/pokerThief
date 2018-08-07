@@ -13,6 +13,13 @@ class Player():
         self.chips_in_pot = 0
         # signify if instance is human or computer
         self.human = 1
+        
+    def str_hand(self):
+        new_hand = []
+        for card in self.hand:
+            str_card = str(card[0]) + str(card[1])
+            new_hand.append(str_card)
+        return new_hand
 
     def draw_card(self,card):
         self.hand.append(card)

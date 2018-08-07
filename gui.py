@@ -45,9 +45,9 @@ class Player_window(tk.Frame):
     def create_current_plyr_image(self,plyr):
         self.plyrMsg.configure(text='What will '+plyr+' do?')
         print(room.table.plyr_dict[plyr].hand)
-        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+''.join(room.table.plyr_dict[plyr].hand[0])+'.gif'))
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[0]+'.gif'))
         self.card1.configure(image=self.cardimg1)
-        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+''.join(room.table.plyr_dict[plyr].hand[1])+'.gif'))
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
         self.card2.configure(image=self.cardimg2)
         
     # subsume into above
@@ -88,14 +88,12 @@ class Player_window(tk.Frame):
             else:
                 self.create_call_buttons(plyr)
         
-    def call(self,plyr):
-        room.table.call(plyr)
-        room.tableWindow.updateTableChips()
+    def call(self, plyr, amount=0):
+        amount = min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)
+        room.table.call(plyr, amount)
+        room.table_window.update_table_chips()
         self.destroyButtons()
-        if room.table.leftToAct != []:
-            self.nextPlayer()
-        else:
-            self.endRound()
+        self.populate(plyr)
         
     # note Raise instead of raise
     def Raise(self,plyr,amount=0):
@@ -294,7 +292,7 @@ class Table_window(tk.Frame):
     # called after player decisions, update all player chips and pot chip amount
     def update_table_chips(self):
         self.chips.configure(text=room.table.pot)
-        for plyr in room.table.playerOrder:
+        for plyr in room.table.seat_order:
             room.imageList[plyr].stack.configure(text=room.table.plyr_dict[plyr].stack)
         
     # get and reveal gui images of dealt cards
