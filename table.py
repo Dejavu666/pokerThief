@@ -54,9 +54,9 @@ class Table():
             self.post_blinds_2player()
         else:
             # dealer+1 enough chips for SB
-            if self.plyr_dict[self.seat_order[1]].stack >= self.big_blind/2:
-                self.plyr_dict[self.seat_order[1]].contribute_chips(self.big_blind/2)
-                self.pot += self.big_blind/2
+            if self.plyr_dict[self.seat_order[1]].stack >= self.big_blind//2:
+                self.plyr_dict[self.seat_order[1]].contribute_chips(self.big_blind//2)
+                self.pot += self.big_blind//2
             else: # dealer+1 not enough chips for SB
                 self.pot += self.plyr_dict[self.seat_order[1]].stack
                 self.plyr_dict[self.seat_order[1]].contribute_chips(\
@@ -80,9 +80,9 @@ class Table():
     # post_blinds for only 2 players, helper func called by post_blinds()
     def post_blinds_2player(self):
         # dealer enough for SB
-        if self.plyr_dict[self.seat_order[0]].stack >= self.big_blind/2:
-            self.plyr_dict[self.seat_order[0]].contribute_chips(self.big_blind/2)
-            self.pot += self.big_blind/2
+        if self.plyr_dict[self.seat_order[0]].stack >= self.big_blind//2:
+            self.plyr_dict[self.seat_order[0]].contribute_chips(self.big_blind//2)
+            self.pot += self.big_blind//2
         else: # dealer not enough for SB
             self.pot += self.plyr_dict[self.seat_order[0]].stack
             self.plyr_dict[self.seat_order[0]].contribute_chips( \
@@ -224,6 +224,9 @@ class Table():
     # Returns legal actions of next player left to act
     # should maybe skip all-in here
     def get_legal_actions(self):
+        if self.is_round_or_hand_over() == 'sentinel':
+            # hand over, next hand
+            print('hand over')
         plyr = self.left_to_act[0]
         # Special BB options
         if self.is_bb_option_avail(plyr) == True:
@@ -308,7 +311,7 @@ class Table():
             self.pot -= pot
         else: # tie needs to be broken for this one pot, working bug, what about remainder here?
             winners = hands.break_ties(top_plyrs, self)
-            amount = pot / len(winners)
+            amount = pot // len(winners)
             for p in winners:
                 self.plyr_dict[p].stack += amount
 
