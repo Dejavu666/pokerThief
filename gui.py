@@ -91,7 +91,6 @@ class Player_window(tk.Frame):
                 else:
                     self.fold(plyr)
         else:# actions for human user
-            print(options)
             self.create_current_plyr_image(plyr)
             if options == 'check_options':
                 self.create_check_buttons(plyr)
@@ -114,14 +113,14 @@ class Player_window(tk.Frame):
             amount = self.wagerEntry.get()
         except:
             pass
-        room.table.Raise(plyr,amount)
-        room.tableWindow.updateTableChips()
+        room.table.raze(plyr,amount)
+        room.table_window.update_table_window_cards_and_chips()
         self.destroyButtons()
         room.left_panel_buttons.get_action()
         
     def fold(self,plyr):
         room.table.fold(plyr)
-        room.tableWindow.updateTableChips()
+        room.table_window.update_table_window_cards_and_chips()
         room.imageList[currentPlyr].c1.configure(image=room.noCard)
         room.imageList[currentPlyr].c2.configure(image=room.noCard)
         self.destroyButtons()
@@ -214,10 +213,13 @@ class Left_panel_buttons(tk.Frame):
     # calls populate() to get the first action, called by self.gtActn button
     def get_action(self):
         opts_plyr = room.table.get_legal_actions()
-        print(opts_plyr)
-        if opts_plyr == 'hand over':
+        if type(opts_plyr) == list:
             # showdown already happened, can just update chip images, return winners here to display
             room.table_window.update_table_window_cards_and_chips()
+            # for tup in opts_plyr: present winner screen for player and amount
+            for tup in opts_plyr:
+                print(tup)
+            # working here marker
             return
         options = opts_plyr[0]
         plyr = opts_plyr[-1]

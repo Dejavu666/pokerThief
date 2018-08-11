@@ -184,7 +184,7 @@ class Table():
         self.in_hand.remove(plyr)
 
     def is_bb_option_avail(self, player):
-        if self.round == 1 and self.min_bet == self.big_blind:
+        if self.round == 1 and self.cost_to_play == self.big_blind:
             if len(self.seat_order)==2:# only 2 players
                 if player == self.seat_order[1]:
                     return True
@@ -206,19 +206,22 @@ class Table():
     
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
-            self.reward_only_player()
-            return 'hand over sentinel'
+            return self.reward_only_player()
+            # winner structure is same for each return
+            # returns list of tuples like [(playerN, amount),...]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
                 if self.sidepots_check() == True:
+                    val = []
                     pots_plyrs_list = self.create_sidepots()
                     for pot_plyrs_tup in pots_plyrs_list:
-                        self.showdown(pot_plyrs_tup)
-                        return 'hand over sentinel'
+                        tups = self.showdown(pot_plyrs_tup)
+                        for tup in tups:
+                            val.append(tup)
+                        return val
                 else:
-                    self.showdown((self.pot,self.in_hand[:]))
-                    return 'hand over sentinel'
-                self.clean_table_after_hand()
+                    val = self.showdown((self.pot,self.in_hand[:]))
+                    return val
             else:
                 assert(self.round in [1,2,3])
                 self.advance_round()
@@ -226,8 +229,9 @@ class Table():
     # Returns legal actions of next player left to act
     # should maybe skip all-in here
     def get_legal_actions(self):
-        if self.is_round_or_hand_over() == 'hand over sentinel':
-            return 'hand over'
+        if type(self.is_round_or_hand_over()) == list:
+            # return list of tuples here [(playerN, amount), ...]
+            return self.is_round_or_hand_over()
         plyr = self.left_to_act[0]
         # Special BB options
         if self.is_bb_option_avail(plyr) == True:
@@ -258,9 +262,11 @@ class Table():
 
     def reward_only_player(self):
         assert(len(self.in_hand)==1)
+        val = [(self.in_hand[0], self.pot)]
         self.plyr_dict[self.in_hand[0]].stack += self.pot
         self.pot = 0
         self.clean_table_after_hand()
+        return val
 
     def advance_round(self):
         if self.round == 1:# preflop to flop, deal 3 com_cards
@@ -307,14 +313,18 @@ class Table():
                 top_plyrs.append(plyr)
         # if one winner: award player
         if len(top_plyrs) == 1:
-            # reward top_plyrs[0]
+            val = [(top_plyrs[0], pot)]
             self.plyr_dict[top_plyrs[0]].stack += pot
             self.pot -= pot
+            return val
         else: # tie needs to be broken for this one pot, working bug, what about remainder here?
             winners = hands.break_ties(top_plyrs, self)
             amount = pot // len(winners)
+            val = []
             for p in winners:
                 self.plyr_dict[p].stack += amount
+                val.append((p, amount))
+            return val
 
     # Assigns hand_rank and tie_break values to the Player object
     # Only makes sense to call when Player has 2 cards and table.community has 5
