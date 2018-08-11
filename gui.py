@@ -215,6 +215,10 @@ class Left_panel_buttons(tk.Frame):
     def get_action(self):
         opts_plyr = room.table.get_legal_actions()
         print(opts_plyr)
+        if opts_plyr == 'hand over':
+            # showdown already happened, can just update chip images, return winners here to display
+            room.table_window.update_table_window_cards_and_chips()
+            return
         options = opts_plyr[0]
         plyr = opts_plyr[-1]
         room.table_window.update_table_window_cards_and_chips()

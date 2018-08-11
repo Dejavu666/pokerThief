@@ -3,6 +3,8 @@
 
 # TO DO
 
+# divide by zero error?
+
 # scenario where player has more than call amount but less than legal raise (am i covering the parameters in 'call' correctly?)
 
 # note, NOT provably correct because input parameters are derived from state (dynamic not static)
@@ -205,17 +207,17 @@ class Table():
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
             self.reward_only_player()
-            return 'sentinel'
+            return 'hand over sentinel'
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
                 if self.sidepots_check() == True:
                     pots_plyrs_list = self.create_sidepots()
                     for pot_plyrs_tup in pots_plyrs_list:
                         self.showdown(pot_plyrs_tup)
-                        return 'sentinel'
+                        return 'hand over sentinel'
                 else:
                     self.showdown((self.pot,self.in_hand[:]))
-                    return 'sentinel'
+                    return 'hand over sentinel'
                 self.clean_table_after_hand()
             else:
                 assert(self.round in [1,2,3])
@@ -224,9 +226,8 @@ class Table():
     # Returns legal actions of next player left to act
     # should maybe skip all-in here
     def get_legal_actions(self):
-        if self.is_round_or_hand_over() == 'sentinel':
-            # hand over, next hand
-            print('hand over')
+        if self.is_round_or_hand_over() == 'hand over sentinel':
+            return 'hand over'
         plyr = self.left_to_act[0]
         # Special BB options
         if self.is_bb_option_avail(plyr) == True:
