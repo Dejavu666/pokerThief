@@ -110,21 +110,23 @@ class Table():
             return [(self.pot, self.in_hand[:])]
         small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
         pots_plyrs = []
+        all_plyrs = self.in_hand[:]
         for n in small_stacks:
             pot = 0
-            plyrs = self.in_hand[:]
-            for p in self.in_hand:
+            plyrs = self.all_plyrs[:]
+            for p in plyrs:
                 amount = min(n, self.pot)
                 pot += amount
                 self.pot -= amount
                 if self.pot == 0:
-                    pots_plyrs.append((pot, self.in_hand[:]))
+                    pots_plyrs.append((pot, plyrs))
                     return pots_plyrs
-            pots_plyrs.append((pot, self.in_hand[:]))
+            pots_plyrs.append((pot, plyrs))
             for p in self.in_hand[:]:
                 if self.plyr_dict[p].begin_hand_chips == n:
-                    self.in_hand.remove(p)
-        pots_plyrs.append((self.pot, self.in_hand[:]))
+                    # BUG here destructing in_hand which is used later
+                    all_plyrs.remove(p)
+        pots_plyrs.append((self.pot, all_plyrs))
         return pots_plyrs
 
     def clean_table_after_hand(self):
@@ -202,37 +204,37 @@ class Table():
     
     # Returns legal actions of next player left to act
     # should maybe skip all-in here
-    def get_legal_actions(self):
-        x = self.is_round_or_hand_over()
-        if type(x) == list:
-            return x
-        plyr = self.left_to_act[0]
+    def get_actions(self):
+        p = self.left_to_act[0]
+        if self.plyr_dict[p].stack == 0:
+            return ('all-in')
         # Special BB options
-        if self.is_bb_option_avail(plyr) == True:
-            return ('bb_options',('raise',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack),\
-            ('check'),('fold'), plyr)
+        if self.is_bb_option_avail(p) == True:
+            return ('bb_options',('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack),\
+            ('check'),('fold'), p)
         # Check Bet Fold, table is open
-        elif self.plyr_dict[plyr].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
-            return ('check_options',('bet',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack),\
-            ('check'), ('fold'), plyr)
+        elif self.plyr_dict[p].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
+            return ('check_options',('bet',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack),\
+            ('check'), ('fold'), p)
         # Call Raise Fold, table is bet
         else:
-            return ('call_options',('call',min(self.plyr_dict[plyr].stack,self.cost_to_play-self.plyr_dict[plyr].chips_this_round)),\
-             ('raise',min(self.plyr_dict[plyr].stack,self.min_bet),self.plyr_dict[plyr].stack-self.cost_to_play+self.plyr_dict[plyr].chips_this_round),\
-             ('fold'), plyr)
+            return ('call_options',('call',min(self.plyr_dict[p].stack,self.cost_to_play-self.plyr_dict[p].chips_this_round)),\
+             ('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack-self.cost_to_play+self.plyr_dict[p].chips_this_round),\
+             ('fold'), p)
         
-    def apply_action(self, player, action, amount=0):
-        player = self.left_to_act[0]
+    def apply_action(self, plyr, action, amount=0):
         if action == 'raise':
-            self.raze(player, amount)
+            self.raze(plyr, amount)
         elif action == 'check':
-            self.check(player)
+            self.check(plyr)
         elif action == 'fold':
-            self.fold(player)
+            self.fold(plyr)
         elif action == 'bet':
-            self.bet(player, amount)
+            self.bet(plyr, amount)
         elif action == 'call':
-            self.call(player, amount)
+            self.call(plyr, amount)
+        if self.round_or_hand_over() == 'hand over':
+            return 'hand over'
 
     def advance_round(self):
         if self.round == 1:# preflop to flop, deal 3 com_cards
@@ -293,6 +295,7 @@ class Table():
     def showdown(self, pots_plyrs_tup):
         for p in self.in_hand:
             self.assign_hand_rank(p)
+            print(self.plyr_dict[p].hand_rank)
         for pot_plyr in pots_plyrs_tup:
             high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
             pot = pot_plyr[0]

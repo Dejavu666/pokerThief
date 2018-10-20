@@ -100,6 +100,8 @@ def three_of_a_kind_finder(hand):
         return [max(threes)]+highcards
     return None
 
+
+# BUG tie_break for one-pair not working
 def one_pair_finder(hand):
     ranks = [card[0] for card in hand]
     highcards = []

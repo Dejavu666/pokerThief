@@ -101,7 +101,7 @@ class Player_window(tk.Frame):
         
     def call(self, plyr, amount=0):
         amount = min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)
-        room.table.call(plyr, amount)
+        check_handover = room.table.call(plyr, amount)
         room.table_window.update_table_window_cards_and_chips()
         # update table cards
         self.destroyButtons()
@@ -212,7 +212,7 @@ class Left_panel_buttons(tk.Frame):
         
     # calls populate() to get the first action, called by self.gtActn button
     def get_action(self):
-        opts_plyr = room.table.get_legal_actions()
+        opts_plyr = room.table.get_actions()
         if type(opts_plyr) == list:
             # showdown already happened, can just update chip images, return winners here to display
             room.table_window.update_table_window_cards_and_chips()
