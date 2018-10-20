@@ -4,27 +4,6 @@
 
 # NEED TO: Test that straight_flush is found when having higher flush cards, middle straight
 
-# Takes a list of player names, ensures they all have the same hand_rank,
-# Returns a list of player name(s) that have true ties (same hand_rank and tie_break value)
-def break_ties(plyr_list, table):
-    winners = []
-    while True:
-        highVal = 0
-        for plr in plyr_list:
-            if table.plyr_dict[plr].tie_break[0] > highVal:
-                winners = [plr]
-                highVal = table.plyr_dict[plr].tie_break[0]
-            elif table.plyr_dict[plr].tie_break[0] == highVal:
-                winners.append(plr)
-            table.plyr_dict[plr].tie_break.pop(0)
-        if len(winners) == 1:
-            return winners
-        # if players have exhausted tie_break values
-        elif table.plyr_dict[winners[0]].tie_break == []:
-            break
-    return winners
-
-
 def straight_finder(ranks):
     ranks = list(set(ranks))
     ranks.sort(reverse=True)

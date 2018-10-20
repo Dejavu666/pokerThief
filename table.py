@@ -1,22 +1,21 @@
-# 1) instantiate table object
-# 2) should only interface with table object through get_legal_action(), apply_action() (eventually)
 
 # TO DO
+
+# Bug with continual raising with odd amounts of chips, where sb becomes odd
+
+# Need to separate 'public' and 'private' methods of Table class
+# gui should only call get_actions(), apply_action(), 
 
 # divide by zero error?
 
 # scenario where player has more than call amount but less than legal raise (am i covering the parameters in 'call' correctly?)
 
-# note, NOT provably correct because input parameters are derived from state (dynamic not static)
 
 # If player runs out of chips remove from seat_order/in_hand AFTER hand is resolved
-# Test create_sidepots() with edge cases
-# fix remainder chips in showdown()
-# some tie_break lens are 3, is this correct?
 # division is changing ints to floats in player.stack or table.pot
 
 
-import player, deck, hands, helpers
+import player, deck, hands
 from random import shuffle
 
 class Table():
@@ -42,6 +41,7 @@ class Table():
         self.left_to_act = []
         self.in_hand = []
         self.cost_to_play = 0
+        
         
     def deal_hole_cards(self):
         for p in self.seat_order:
@@ -102,35 +102,30 @@ class Table():
         self.in_hand = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
+    # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
-    # Call if at least one sidepot ncsry, at least one player is all-in/in_hand
-    def create_sidepots(self):
-        players_in_hand = self.in_hand[:]
-        pot_chips = self.pot
-        pots_w_elig_players = []
-        all_in = []
-        for plyr in self.in_hand:
-            if self.plyr_dict[plyr].stack == 0:# if player is all-in
-                all_in.append((self.plyr_dict[plyr].begin_hand_chips, plyr))
-        all_in.sort()
-        # keep only unique pot values in all_in
-        stacks = [x[0] for x in all_in if x[0] not in stacks]
-        # all_in looks like: [(lowest_plyr.begin_hand_chips, lowest_plyr_str),...
-        # just consume players that are all-in, only they need sidepots
-        for stack in stacks:# for each player that needs a sidepot
-            sidepot = 0
-            for plyr in self.seat_order:# build the sidepot
-                amount = min(self.plyr_dict[plyr].chips_in_pot, stack, pot_chips)
-                sidepot += amount
-                pot_chips -= amount
-                if pot_chips == 0:# pot is consumed, current (last) sidepot is mainpot
-                    pots_w_elig_players.append((sidepot, players_in_hand))
-                    return pots_w_elig_players
-            pots_w_elig_players.append((sidepot, players_in_hand))
-            # remove players with equiv, least chips_in_pot from players_in_hand
-            for player in self.in_hand:
-                if self.plyr_dict[player].chips_in_pot == stack:
-                    players_in_hand.remove(player)
+    def create_pots(self):
+        all_in = [p for p in self.in_hand if self.plyr_dict[p].stack == 0]
+        if len(all_in) == 0:
+            return [(self.pot, self.in_hand[:])]
+        small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
+        pots_plyrs = []
+        for n in small_stacks:
+            pot = 0
+            plyrs = self.in_hand[:]
+            for p in self.in_hand:
+                amount = min(n, self.pot)
+                pot += amount
+                self.pot -= amount
+                if self.pot == 0:
+                    pots_plyrs.append((pot, self.in_hand[:]))
+                    return pots_plyrs
+            pots_plyrs.append((pot, self.in_hand[:]))
+            for p in self.in_hand[:]:
+                if self.plyr_dict[p].begin_hand_chips == n:
+                    self.in_hand.remove(p)
+        pots_plyrs.append((self.pot, self.in_hand[:]))
+        return pots_plyrs
 
     def clean_table_after_hand(self):
         self.pot = 0
@@ -192,36 +187,15 @@ class Table():
                 if player == self.seat_order[2]:
                     return True
         return False
-
-    def skip_all_in_plyr(self):
-        for p in self.seat_order:
-            if self.plyr_dict[p].stack == 0 and p in self.left_to_act:
-                self.left_to_act.remove(p)
-    
-    def sidepots_check(self):
-        for p in self.in_hand:
-            if self.plyr_dict[p].stack == 0:
-                return True
-        return False
-    
+                
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
             return self.reward_only_player()
-            # winner structure is same for each return
-            # returns list of tuples like [(playerN, amount),...]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
-                if self.sidepots_check() == True:
-                    val = []
-                    pots_plyrs_list = self.create_sidepots()
-                    for pot_plyrs_tup in pots_plyrs_list:
-                        tups = self.showdown(pot_plyrs_tup)
-                        for tup in tups:
-                            val.append(tup)
-                        return val
-                else:
-                    val = self.showdown((self.pot,self.in_hand[:]))
-                    return val
+                pots_plyrs = self.create_pots()
+                self.showdown(pots_plyrs)
+                return pots_plyrs
             else:
                 assert(self.round in [1,2,3])
                 self.advance_round()
@@ -229,9 +203,9 @@ class Table():
     # Returns legal actions of next player left to act
     # should maybe skip all-in here
     def get_legal_actions(self):
-        if type(self.is_round_or_hand_over()) == list:
-            # return list of tuples here [(playerN, amount), ...]
-            return self.is_round_or_hand_over()
+        x = self.is_round_or_hand_over()
+        if type(x) == list:
+            return x
         plyr = self.left_to_act[0]
         # Special BB options
         if self.is_bb_option_avail(plyr) == True:
@@ -259,14 +233,6 @@ class Table():
             self.bet(player, amount)
         elif action == 'call':
             self.call(player, amount)
-
-    def reward_only_player(self):
-        assert(len(self.in_hand)==1)
-        val = [(self.in_hand[0], self.pot)]
-        self.plyr_dict[self.in_hand[0]].stack += self.pot
-        self.pot = 0
-        self.clean_table_after_hand()
-        return val
 
     def advance_round(self):
         if self.round == 1:# preflop to flop, deal 3 com_cards
@@ -296,38 +262,46 @@ class Table():
                 new_seats.append(plyr)
         self.seat_order = new_seats[:]
         
-    # input looks like: (800, [player1,player2,...])
-    # one pot (side or main) and the list of players who are eligible to win all chips
-    def showdown(self, pot_and_player_tuple):
-        # Get highest hand_rank
-        players = pot_and_player_tuple[1]
-        pot = pot_and_player_tuple[0]
-        max_rank = 0
-        top_plyrs = []
-        for plyr in players:
-            self.assign_hand_rank(plyr)
-            if self.plyr_dict[plyr].hand_rank > max_rank:
-                top_plyrs = [plyr]
-                max_rank = self.plyr_dict[plyr].hand_rank
-            elif self.plyr_dict[plyr].hand_rank == max_rank:
-                top_plyrs.append(plyr)
-        # if one winner: award player
-        if len(top_plyrs) == 1:
-            val = [(top_plyrs[0], pot)]
-            self.plyr_dict[top_plyrs[0]].stack += pot
-            self.pot -= pot
-            return val
-        else: # tie needs to be broken for this one pot, working bug, what about remainder here?
-            winners = hands.break_ties(top_plyrs, self)
-            amount = pot // len(winners)
-            val = []
-            for p in winners:
-                self.plyr_dict[p].stack += amount
-                val.append((p, amount))
-            return val
+    # called by showdown(), break ties among same hand_rank
+    def break_ties(self, plyrs):
+        while(True):
+            if self.plyr_dict[plyrs[0]].tie_break == []:
+                return plyrs
+            max = self.plyr_dict[plyrs[0]].tie_break[0]
+            for p in plyrs[:]:
+                if self.plyr_dict[p].tie_break[0] < max:
+                    if p in plyrs:
+                        plyrs.remove(p)
+                self.plyr_dict[p].tie_break = self.plyr_dict[p].tie_break[1:]
+            if len(plyrs) == 1:
+                return plyrs
+    
+    def reward(self, pot, plyrs):
+        remainder = pot % len(plyrs)
+        pot -= remainder
+        for p in plyrs:
+            self.plyr_dict[p].stack += (pot//len(plyrs))
+        while(remainder):
+            for p in self.in_hand[1:]+[self.in_hand[0]]:
+                if remainder > 0:
+                    self.plyr_dict[p].stack += 1
+                    remainder -= 1
+    
+    # Takes the 'pots_plyrs' output from create_pots()
+    # Ends the hand, rewards players
+    # Should prompt for next_hand with this
+    def showdown(self, pots_plyrs_tup):
+        for p in self.in_hand:
+            self.assign_hand_rank(p)
+        for pot_plyr in pots_plyrs_tup:
+            high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
+            pot = pot_plyr[0]
+            plyrs = pot_plyr[1]
+            self.reward(pot, self.break_ties([p for p in plyrs if self.plyr_dict[p].hand_rank == high]))
+        
 
+    
     # Assigns hand_rank and tie_break values to the Player object
-    # Only makes sense to call when Player has 2 cards and table.community has 5
     def assign_hand_rank(self, plyr):
         hand = self.plyr_dict[plyr].hand + self.com_cards
         handranks_w_ace_as_one = []
@@ -368,13 +342,6 @@ class Table():
 
 #     def next_hand(self)
 
-######### in gui dispatch these ########
-# deal_hole_cards()
-# post_blinds()
-# skip_all_in_plyr()
-# if left2act: get_legal_actions(), present them, apply_action()
-# if is_round_or_hand_over() returns 'sentinel': hand is over
-
 ############ TESTS #################
 if __name__=='__main__':
     table = Table(2,1000,20)
@@ -385,7 +352,7 @@ if __name__=='__main__':
         table.post_blinds()
         sentinel = 1
         while(sentinel):
-            table.skip_all_in_plyr()
+            #table.skip_all_in_plyr()
             if len(table.left_to_act) > 0:
                 plyr = table.left_to_act[0]
                 print(table.get_legal_actions())

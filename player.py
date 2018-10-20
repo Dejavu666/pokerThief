@@ -13,6 +13,8 @@ class Player():
         self.chips_in_pot = 0
         # signify if instance is human or computer
         self.human = 1
+        self.hand_rank = 0
+        self.tie_break = []
         
     def str_hand(self):
         new_hand = []
