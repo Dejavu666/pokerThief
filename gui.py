@@ -116,18 +116,24 @@ class Player_window(tk.Frame):
         room.table_window.update_table_window_cards_and_chips()
         self.destroyButtons()
         maybe_winner = room.table.apply_action(plyr, 'call', amount)
-        room.player_window.get_actions()
+        if maybe_winner:
+            room.table.next_hand()
+        else:
+            room.player_window.get_actions()
         
     # note Raise instead of raise
     def Raise(self,plyr,amount=0):
         try:
             amount = self.wagerEntry.get()
         except:
-            pass
-        room.table.raze(plyr,amount)
+            print('Raise gui error')
         room.table_window.update_table_window_cards_and_chips()
+        maybe_winner = room.table.apply_action(plyr, 'raise', amount)
         self.destroyButtons()
-        room.left_panel_buttons.get_action()
+        if maybe_winner:
+            room.table.next_hand()
+        else:
+            room.player_window.get_actions()
         
     def fold(self,plyr):
         room.table.fold(plyr)

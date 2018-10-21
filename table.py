@@ -168,7 +168,7 @@ class Table():
         self.plyr_dict[plyr].contribute_chips(amount)
         self.left_to_act.remove(plyr)
 
-    def raze(self, plyr, raise_amount):
+    def _raise(self, plyr, raise_amount):
         assert(raise_amount >= self.min_bet)
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
         assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
@@ -227,7 +227,7 @@ class Table():
         
     def apply_action(self, plyr, action, amount=0):
         if action == 'raise':
-            self.raze(plyr, amount)
+            self._raise(plyr, amount)
         elif action == 'check':
             self.check(plyr)
         elif action == 'fold':
