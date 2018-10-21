@@ -3,7 +3,6 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import sys
 
-
 class Player_window(tk.Frame):
     def __init__(self,parent):
         tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
@@ -18,6 +17,15 @@ class Player_window(tk.Frame):
         self.card2 = tk.Label(self,image=None,bg='black')
         self.card2.pack(side='left')
         
+        # calls populate() to get the first action
+    def get_actions(self):
+        options = room.table.get_actions()
+        plyr = room.table.left_to_act[0]
+        room.player_window.populate(plyr, options)
+        
+    def create_all_in_buttons(self, plyr):
+        self.b1 = tk.Button(self,text='Check',highlightbackground='black',font=('Helvetica',16),command=lambda:self.check(plyr))
+        self.b1.pack(side='left')
         
     def create_bb_option_buttons(self, plyr):
         self.b1 =  tk.Button(self,text='Check',highlightbackground='black',font=('Helvetica',16),command=lambda:self.check(plyr))
@@ -28,7 +36,7 @@ class Player_window(tk.Frame):
         self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
-    # dispatch self.check(),self.bet(),self.fold()
+        
     def create_check_buttons(self,plyr):
         self.b1 =  tk.Button(self,text='Check',highlightbackground='black',font=('Helvetica',16),command=lambda:self.check(plyr))
         self.b1.pack(side='left')
@@ -70,6 +78,7 @@ class Player_window(tk.Frame):
 # this populates the player_window (bottom window) with current player info
 # input is player string and repr of legal player options (options[0],optio
     def populate(self, plyr, options):
+        # FOR BOTS FROM THE FUTURE
         if room.table.plyr_dict[plyr].human == 0:
             self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
             self.createBotPlayerImage(plyr)
@@ -90,22 +99,24 @@ class Player_window(tk.Frame):
                     self.Raise(plyr,maybeAmount)
                 else:
                     self.fold(plyr)
-        else:# actions for human user
+        else:# PUNY HUMANS
             self.create_current_plyr_image(plyr)
-            if options == 'check_options':
-                self.create_check_buttons(plyr)
-            elif options == 'bb_options':
+            if options[0] == 'all-in':
+                self.create_all_in_buttons(plyr)
+            elif options[0] == 'bb_options':
                 self.create_bb_option_buttons(plyr)
-            else:
+            elif options[0] == 'check_options':
+                self.create_check_buttons(plyr)
+            elif options[0] == 'call_options':
                 self.create_call_buttons(plyr)
+            room.table_window.update_table_window_cards_and_chips()
         
     def call(self, plyr, amount=0):
         amount = min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)
-        check_handover = room.table.call(plyr, amount)
         room.table_window.update_table_window_cards_and_chips()
-        # update table cards
         self.destroyButtons()
-        room.left_panel_buttons.get_action()
+        maybe_winner = room.table.apply_action(plyr, 'call', amount)
+        room.player_window.get_actions()
         
     # note Raise instead of raise
     def Raise(self,plyr,amount=0):
@@ -165,66 +176,10 @@ class Left_panel_buttons(tk.Frame):
         self.bg.bind('<Configure>', self._resize_image)
         self.bg.pack(fill=tk.BOTH, expand=tk.YES)
         
-        # Press to move dealer button, eliminates any busted players
-        self.move_button_b = tk.Button(self.bg,takefocus=1, text='Move Button',highlightbackground='darkred',command=self.move_dlr_button)
-        self.move_button_b.pack()
-        
-        # Press to deal 2 cards to all players
-        self.deal_hole_b = tk.Button(self.bg,takefocus=1, text='Deal Cards',highlightbackground='darkred',command=self.deal_cards)
-        self.deal_hole_b.pack()
-        
-        # Press to post blinds
-        self.post_blinds_b = tk.Button(self.bg,takefocus=1, text='Post Blinds',highlightbackground='darkred',command=self.post_blinds)
-        self.post_blinds_b.pack()
-        
-        # Press to start hand, get first action from player
-        self.get_action_b = tk.Button(self.bg,takefocus=1,text='Get Action',highlightbackground='darkred',command=self.get_action)
-        self.get_action_b.pack()
         
         # Press to reveal all hands
         self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.show_hands)
         self.shwHands.pack()
-        
-        # Press to reset everything, should happen between hands
-#         self.clnUp = tk.Button(self.bg,text='Clean',highlightbackground='darkred',command=self.cleanUp)
-#         self.clnUp.pack()
-        
-    # move dealer button and eliminate busted players, called by self.move_button_b
-    def move_dlr_button(self):
-        room.table.move_button()
-        room.imageList[room.table.playerOrder[-1]].dealerButton.configure(text='')
-        room.imageList[room.table.playerOrder[0]].dealerButton.configure(text='Dealer')
-        for plyr in room.table.playerOrder[:]:
-            if room.table.plyr_dict[plyr].stack == 0:
-                room.tableWindow.deletePlayer(plyr)
-                
-    # deals 2 cards to all players, called by self.deal button
-    def deal_cards(self):
-        room.table.deal_hole_cards()
-        for plyr in room.table.seat_order:
-            room.imageList[plyr].c1.configure(image=room.card_back)
-            room.imageList[plyr].c2.configure(image=room.card_back)
-                
-    # post blinds, called by self.pstBlinds button
-    def post_blinds(self):
-        room.table.post_blinds()
-        room.table_window.update_table_window_cards_and_chips()
-        
-    # calls populate() to get the first action, called by self.gtActn button
-    def get_action(self):
-        opts_plyr = room.table.get_actions()
-        if type(opts_plyr) == list:
-            # showdown already happened, can just update chip images, return winners here to display
-            room.table_window.update_table_window_cards_and_chips()
-            # for tup in opts_plyr: present winner screen for player and amount
-            for tup in opts_plyr:
-                print(tup)
-            # working here marker
-            return
-        options = opts_plyr[0]
-        plyr = opts_plyr[-1]
-        room.table_window.update_table_window_cards_and_chips()
-        room.player_window.populate(plyr, options)
         
     # reveal each player's hand, called by self.shwHands button
     def show_hands(self,event=None):
@@ -235,10 +190,6 @@ class Left_panel_buttons(tk.Frame):
                 room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
                 room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
             
-    # reset, called by self.clnUp button
-#     def cleanUp(self):
-#         room.tableWindow.clean()
-        
     # resize background image on window resize
     def _resize_image(self,event):
         new_width = event.width # event.width is new window width
@@ -459,6 +410,10 @@ class StartGamePopup(object):
         self.top.destroy()
         room.table_window.create_player_images(room.table.seat_order)
         room.table_window.create_chip_and_card_images()
+        for plyr in room.table.seat_order:
+            room.imageList[plyr].c1.configure(image=room.card_back)
+            room.imageList[plyr].c2.configure(image=room.card_back)
+        room.player_window.populate(room.table.left_to_act[0], room.table.get_actions())
         
 
 # just a geometry organizer for other classes

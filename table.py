@@ -42,6 +42,8 @@ class Table():
         self.in_hand = []
         self.cost_to_play = 0
         
+        self.deal_hole_cards()
+        self.post_blinds()
         
     def deal_hole_cards(self):
         for p in self.seat_order:
@@ -192,12 +194,13 @@ class Table():
                 
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
-            return self.reward_only_player()
+            dict = self.reward(self.pot, self.in_hand[0])
+            return ['hand over', dict]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
                 pots_plyrs = self.create_pots()
-                self.showdown(pots_plyrs)
-                return pots_plyrs
+                dict = self.showdown(pots_plyrs)
+                return ['hand over', dict]
             else:
                 assert(self.round in [1,2,3])
                 self.advance_round()
@@ -207,7 +210,7 @@ class Table():
     def get_actions(self):
         p = self.left_to_act[0]
         if self.plyr_dict[p].stack == 0:
-            return ('all-in')
+            return ('all-in',('check'))
         # Special BB options
         if self.is_bb_option_avail(p) == True:
             return ('bb_options',('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack),\
@@ -233,8 +236,9 @@ class Table():
             self.bet(plyr, amount)
         elif action == 'call':
             self.call(plyr, amount)
-        if self.round_or_hand_over() == 'hand over':
-            return 'hand over'
+        maybe_winner_info = self.is_round_or_hand_over()
+        if maybe_winner_info:
+            return maybe_winner_info
 
     def advance_round(self):
         if self.round == 1:# preflop to flop, deal 3 com_cards
@@ -279,20 +283,25 @@ class Table():
                 return plyrs
     
     def reward(self, pot, plyrs):
+        winner_info = dict((plyr, 0) for plyr in plyrs)
         remainder = pot % len(plyrs)
         pot -= remainder
         for p in plyrs:
+            winner_info[p] += (pot//len(plyrs))
             self.plyr_dict[p].stack += (pot//len(plyrs))
         while(remainder):
             for p in self.in_hand[1:]+[self.in_hand[0]]:
                 if remainder > 0:
                     self.plyr_dict[p].stack += 1
+                    winner_info[p] += 1
                     remainder -= 1
+        return winner_info
     
     # Takes the 'pots_plyrs' output from create_pots()
     # Ends the hand, rewards players
     # Should prompt for next_hand with this
     def showdown(self, pots_plyrs_tup):
+        main_dict = {}
         for p in self.in_hand:
             self.assign_hand_rank(p)
             print(self.plyr_dict[p].hand_rank)
@@ -300,7 +309,13 @@ class Table():
             high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
             pot = pot_plyr[0]
             plyrs = pot_plyr[1]
-            self.reward(pot, self.break_ties([p for p in plyrs if self.plyr_dict[p].hand_rank == high]))
+            dict = self.reward(pot, self.break_ties([p for p in plyrs if self.plyr_dict[p].hand_rank == high]))
+            for k in dict.keys():
+                if k not in main_dict.keys():
+                    main_dict[k] = dict[k]
+                else:
+                    main_dict[k] += dict[k]
+        return main_dict
         
 
     
@@ -351,8 +366,6 @@ if __name__=='__main__':
     for p in table.seat_order:
         table.plyr_dict[p].human = 1
     while(1):
-        table.deal_hole_cards()
-        table.post_blinds()
         sentinel = 1
         while(sentinel):
             #table.skip_all_in_plyr()
