@@ -17,7 +17,7 @@ class Player_window(tk.Frame):
         self.card2 = tk.Label(self,image=None,bg='black')
         self.card2.pack(side='left')
         
-        # calls populate() to get the first action
+    # calls populate(), gets legal actions from underlying table object
     def get_actions(self):
         options = room.table.get_actions()
         plyr = room.table.left_to_act[0]
@@ -47,7 +47,6 @@ class Player_window(tk.Frame):
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
-    # dispatch self.call(),self.Raise(),self.fold()
     def create_call_buttons(self,plyr):
         self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
         self.b1.pack(side='left')
@@ -68,15 +67,14 @@ class Player_window(tk.Frame):
         self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
         self.card2.configure(image=self.cardimg2)
         
-    # subsume into above
+    # working here, bots after refactor
     def createBotPlayerImage(self,plyr):
         self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
         # WORKING HERE
         self.card1.configure(image=room.cardBack)
         self.card2.configure(image=room.cardBack)
 
-# this populates the player_window (bottom window) with current player info
-# input is player string and repr of legal player options (options[0],optio
+    # Called by get_actions(), figures out what buttons/images in player_window
     def populate(self, plyr, options):
         # FOR BOTS FROM THE FUTURE
         if room.table.plyr_dict[plyr].human == 0:
@@ -117,7 +115,9 @@ class Player_window(tk.Frame):
         self.destroyButtons()
         maybe_winner = room.table.apply_action(plyr, 'call', amount)
         if maybe_winner:
-            room.table.next_hand()
+            # display winner info somewhere?, player_window or table_window?
+            print(maybe_winner)
+            self.next_hand()
         else:
             room.player_window.get_actions()
         
@@ -131,34 +131,59 @@ class Player_window(tk.Frame):
         maybe_winner = room.table.apply_action(plyr, 'raise', amount)
         self.destroyButtons()
         if maybe_winner:
-            room.table.next_hand()
+            print(maybe_winner)
+            self.next_hand()
         else:
             room.player_window.get_actions()
         
     def fold(self,plyr):
-        room.table.fold(plyr)
+        maybe_winner = room.table.apply_action(plyr, 'fold')
         room.table_window.update_table_window_cards_and_chips()
-        room.imageList[currentPlyr].c1.configure(image=room.noCard)
-        room.imageList[currentPlyr].c2.configure(image=room.noCard)
+        room.imageList[plyr].c1.configure(image=room.no_card)
+        room.imageList[plyr].c2.configure(image=room.no_card)
         self.destroyButtons()
-        room.left_panel_buttons.get_action()
+        if maybe_winner:
+            print(maybe_winner)
+            self.next_hand()
+        else:
+            room.player_window.get_actions()
         
     def bet(self,plyr,amount=0):
         try:
             amount = self.wagerEntry.get()
         except:
             pass
-        room.table.bet(plyr,amount)
+        maybe_winner = room.table.apply_action(plyr, 'bet', amount)
         room.table_window.update_table_window_cards_and_chips()
         self.destroyButtons()
-        room.left_panel_buttons.get_action()
+        if maybe_winner:
+            print(maybe_winner)
+            self.next_hand()
+        else:
+            room.player_window.get_actions()
     
     def check(self,plyr):
-        room.table.check(plyr)
+        maybe_winner = room.table.apply_action(plyr, 'check')
         room.table_window.update_table_window_cards_and_chips()
         self.destroyButtons()
-        room.left_panel_buttons.get_action()
+        if maybe_winner:
+            print(maybe_winner)
+            self.next_hand()
+        else:
+            room.player_window.get_actions()
             
+    def next_hand(self):
+        for plyr in room.table.seat_order:
+            if room.table.plyr_dict[plyr].stack == 0:
+                room.imageList[plyr].destroy()
+        room.table.next_hand()
+        room.table_window.create_player_images(room.table.seat_order)
+        room.table_window.create_chip_and_card_images()
+        for plyr in room.table.seat_order:
+            room.imageList[plyr].c1.configure(image=room.card_back)
+            room.imageList[plyr].c2.configure(image=room.card_back)
+        room.player_window.populate(room.table.left_to_act[0], room.table.get_actions())
+        
     def destroyButtons(self):
         try:
             self.b1.destroy()
@@ -170,42 +195,6 @@ class Player_window(tk.Frame):
         except:
             pass
     
-    
-class Left_panel_buttons(tk.Frame):
-    # creates buttons 
-    def __init__(self,parent):
-        tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
-        self.lpbg = Image.open('res/leftPanelbg.gif')
-        self.img_copy= self.lpbg.copy()
-        self.bgimg = ImageTk.PhotoImage(self.lpbg)
-        self.bg = tk.Label(self,image=self.bgimg)
-        self.bg.bind('<Configure>', self._resize_image)
-        self.bg.pack(fill=tk.BOTH, expand=tk.YES)
-        
-        
-        # Press to reveal all hands
-        self.shwHands = tk.Button(self.bg,text='Show Hands',highlightbackground='darkred',command=self.show_hands)
-        self.shwHands.pack()
-        
-    # reveal each player's hand, called by self.shwHands button
-    def show_hands(self,event=None):
-        for plyr in room.table.seat_order:
-            if room.table.plyr_dict[plyr].str_hand() != []:
-                room.imageList[plyr].img1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[0]+'.gif'))
-                room.imageList[plyr].c1.configure(image=room.imageList[plyr].img1)
-                room.imageList[plyr].img2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
-                room.imageList[plyr].c2.configure(image=room.imageList[plyr].img2)
-            
-    # resize background image on window resize
-    def _resize_image(self,event):
-        new_width = event.width # event.width is new window width
-        new_height = event.height # event.height is new window height
-        self.image = self.img_copy.resize((new_width, new_height)) # image becomes same size as window
-        self.bgImg = ImageTk.PhotoImage(self.image) # change to ImageTk
-        self.bg.configure(image = self.bgImg) 
-            
-            
-            
 class Start_game_bar(tk.Frame):
     def __init__(self,parent):
         tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
@@ -233,7 +222,7 @@ class Table_window(tk.Frame):
         self.background.bind('<Configure>', self._resize_image) # bind to resize window
         self.background.pack(fill=tk.BOTH, expand=tk.YES)
         
-#     initialize pot and community cards gui area
+    # Initialize pot and community cards gui area
     def create_chip_and_card_images(self):
         self.chip_frame = tk.Frame(self.background,bg='black',relief='groove',bd=4)
         self.num_frame = tk.Frame(self.chip_frame,bg='black',relief='raised',bd=3)
@@ -254,7 +243,7 @@ class Table_window(tk.Frame):
         self.card5 = tk.Label(self.chip_frame,image=room.no_card,bg='black')
         self.card5.pack(side='left')
         
-    # called after player decisions, update all player chips and pot chip amount
+    # Called after player decisions, update all player chips and pot chip amount
     def update_table_window_cards_and_chips(self):
         self.chips.configure(text=room.table.pot)
         for plyr in room.table.seat_order:
@@ -267,8 +256,7 @@ class Table_window(tk.Frame):
         elif room.table.round == 4:
             self.deal_river()
         
-        
-    # get and reveal gui images of dealt cards
+    # Get and reveal gui images of dealt cards
     def deal_flop(self):
         self.card1img = ImageTk.PhotoImage(Image.open('res/'+str(room.table.com_cards[0][0])+str(room.table.com_cards[0][1])+'.gif'))
         self.card1.configure(image=self.card1img)
@@ -289,6 +277,7 @@ class Table_window(tk.Frame):
     # reference the IMAGES on each players window like so:
     # room.imageList['player1'].stack, .c1 (card1), .c2 (card2)
     # create grid layout depending on number of players
+    # maybe fix crappy grid layout
     def create_player_images(self,plyrOrder):
         room.imageList = {}
         row = 1
@@ -334,9 +323,6 @@ class Table_window(tk.Frame):
                 row = 3
         room.imageList[room.table.seat_order[0]].dealerButton.configure(text='Dealer')
             
-    def deletePlayer(self,plyr):
-        room.table.deletePlayer(plyr)
-        room.imageList[plyr].destroy()
             
     # clean all gui elements for next hand, calls underlying table clean
     def clean(self):
@@ -382,9 +368,7 @@ class QuitGamePopup(object):
         self.top.destroy()
         sys.exit()
 
-# still need to round down to closest factor of 20
-# gets input from user numPlayers,stack_size,bigBlind 
-# stored as room.num_plyrs,room.stack_size,room.bb_size
+# Gets input from user numPlayers,stack_size,bigBlind 
 class StartGamePopup(object):
     def __init__(self,root):
         self.top = tk.Toplevel(root,bg='black',relief='ridge',bd=4)
@@ -426,14 +410,12 @@ class StartGamePopup(object):
 class Main_application(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        # 4 child widgets
+        # 3 child widgets
         self.player_window = Player_window(self)
-        self.left_panel_buttons = Left_panel_buttons(self)
         self.start_game_bar = Start_game_bar(self)
         self.table_window = Table_window(self)
         # geometry packer
         self.player_window.pack(side="bottom", fill="x")
-        self.left_panel_buttons.pack(side="left", fill="y")
         self.start_game_bar.pack(side="top", fill="x")
         self.table_window.pack(side="right", fill="both", expand=True)
         # constant image references held in class that inherits from TK root
@@ -447,8 +429,5 @@ root.geometry('1000x700')
 
 room = Main_application(root)
 room.pack(fill=tk.BOTH, expand=tk.YES)
-
-# table = table.Table(4,1000,20)
-# table.post_blinds()
 
 root.mainloop()

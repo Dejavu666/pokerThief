@@ -115,7 +115,7 @@ class Table():
         all_plyrs = self.in_hand[:]
         for n in small_stacks:
             pot = 0
-            plyrs = self.all_plyrs[:]
+            plyrs = all_plyrs[:]
             for p in plyrs:
                 amount = min(n, self.pot)
                 pot += amount
@@ -179,8 +179,10 @@ class Table():
         self.repop_left_to_act(plyr)
     
     def fold(self, plyr):
-        self.left_to_act.remove(plyr)
-        self.in_hand.remove(plyr)
+        if plyr in self.left_to_act:
+            self.left_to_act.remove(plyr)
+        if plyr in self.in_hand:
+            self.in_hand.remove(plyr)
 
     def is_bb_option_avail(self, player):
         if self.round == 1 and self.cost_to_play == self.big_blind:
@@ -263,9 +265,11 @@ class Table():
 
     def move_button_remove_chipless_players(self):
         new_seats = []
-        for plyr in self.seat_order[1:] + self.seat_order[0:1]:
+        for plyr in self.seat_order[1:] + [self.seat_order[0]]:
             if self.plyr_dict[plyr].stack > 0:
                 new_seats.append(plyr)
+            else:
+                self.plyr_dict.pop(plyr)
         self.seat_order = new_seats[:]
         
     # called by showdown(), break ties among same hand_rank
@@ -317,8 +321,6 @@ class Table():
                     main_dict[k] += dict[k]
         return main_dict
         
-
-    
     # Assigns hand_rank and tie_break values to the Player object
     def assign_hand_rank(self, plyr):
         hand = self.plyr_dict[plyr].hand + self.com_cards
@@ -358,7 +360,13 @@ class Table():
             self.plyr_dict[plyr].hand_rank = 1
             self.plyr_dict[plyr].tie_break = hands.highcard_finder(hand)
 
-#     def next_hand(self)
+# Called after showdown/reward, remove busted plyrs, reset tmp vars, 
+    def next_hand(self):
+        self.move_button_remove_chipless_players()
+        self.clean_table_after_hand()
+        self.post_blinds()
+        self.deck = deck.Deck()
+        self.deal_hole_cards()
 
 ############ TESTS #################
 if __name__=='__main__':
