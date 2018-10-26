@@ -1,22 +1,6 @@
-
-# TO DO
-
-# Bug with continual raising with odd amounts of chips, where sb becomes odd
-
-# Need to separate 'public' and 'private' methods of Table class
-# gui should only call get_actions(), apply_action(), 
-
-# divide by zero error?
-
-# scenario where player has more than call amount but less than legal raise (am i covering the parameters in 'call' correctly?)
-
-
-# If player runs out of chips remove from seat_order/in_hand AFTER hand is resolved
-# division is changing ints to floats in player.stack or table.pot
-
-
 import player, deck, hands
 from random import shuffle
+
 
 class Table():
     def __init__(self, num_players, num_chips, big_blind):
@@ -53,6 +37,8 @@ class Table():
     
     # ?maybe account for division of odd numbers / split chips?
     def post_blinds(self):
+        for p in self.in_hand:
+            self.plyr_dict[p].begin_hand_chips = self.plyr_dict[p].stack
         if len(self.seat_order) == 2:
             # helper function, blind order is different for 2players
             self.post_blinds_2player()
@@ -107,28 +93,50 @@ class Table():
     # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
     def create_pots(self):
-        all_in = [p for p in self.in_hand if self.plyr_dict[p].stack == 0]
+        pd = self.plyr_dict.copy()
+        ih = self.in_hand[:]
+        # first return excess chips to chip leader, if ncsry
+        bs = [p for p in ih if pd[p].chips_in_pot == max([pd[k].chips_in_pot for k in ih])]
+        if len(bs) == 1:
+            ihcpy = ih[:]
+            plyr = bs[0]
+            ihcpy.remove(p)
+            nbscth = max([pd[p].chips_in_pot for p in ihcpy])
+            if pd[plyr].chips_in_pot > nbscth: # if plyr who contr most contr more than next most
+                amount = pd[plyr].chips_in_pot - nbscth
+                self.pot -= amount
+                self.plyr_dict[plyr].stack += amount
+                self.plyr_dict[plyr].chips_in_pot -= amount
+
+        all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
             return [(self.pot, self.in_hand[:])]
+        print('DEBUG all-in ', all_in)
         small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
+        print('DEBUG small_stacks ', small_stacks)
+        sscpy = small_stacks[:]
+        if len(small_stacks) > 1:
+            i = 1
+            for stk in small_stacks[1:]:
+                small_stacks[i] -= small_stacks[i-1]
+                i += 1
+        print('small_stacks ', small_stacks)
         pots_plyrs = []
-        all_plyrs = self.in_hand[:]
-        for n in small_stacks:
+        all_plyrs = self.seat_order[:]
+        ih_plyrs = ih[:]
+        for i, n in enumerate(small_stacks):
             pot = 0
-            plyrs = all_plyrs[:]
-            for p in plyrs:
-                amount = min(n, self.pot)
+            plyrs = ih_plyrs[:]
+            for p in all_plyrs:
+                amount = min(n, pd[p].chips_in_pot)
                 pot += amount
                 self.pot -= amount
-                if self.pot == 0:
-                    pots_plyrs.append((pot, plyrs))
-                    return pots_plyrs
+                pd[p].chips_in_pot -= amount
             pots_plyrs.append((pot, plyrs))
-            for p in self.in_hand[:]:
-                if self.plyr_dict[p].begin_hand_chips == n:
-                    # BUG here destructing in_hand which is used later
-                    all_plyrs.remove(p)
-        pots_plyrs.append((self.pot, all_plyrs))
+            for p in ih_plyrs[:]:
+                if pd[p].begin_hand_chips == sscpy[i]:
+                    ih_plyrs.remove(p)
+        print('return pots_plyrs ', pots_plyrs)
         return pots_plyrs
 
     def clean_table_after_hand(self):
@@ -159,10 +167,10 @@ class Table():
         self.repop_left_to_act(plyr)
         
     def check(self, plyr):
-        self.left_to_act.remove(plyr)
+        if plyr in self.left_to_act:
+            self.left_to_act.remove(plyr)
     
     def call(self, plyr, amount):
-        assert(self.cost_to_play - self.plyr_dict[plyr].chips_this_round == amount)
         assert(amount <= self.plyr_dict[plyr].stack)
         self.pot += amount
         self.plyr_dict[plyr].contribute_chips(amount)
@@ -196,13 +204,13 @@ class Table():
                 
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
-            dict = self.reward(self.pot, self.in_hand[0])
-            return ['hand over', dict]
+            winner_info_dict = self.reward(self.pot, self.in_hand[0])
+            return ['hand over', winner_info_dict]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
                 pots_plyrs = self.create_pots()
-                dict = self.showdown(pots_plyrs)
-                return ['hand over', dict]
+                winner_info_dict = self.showdown(pots_plyrs)
+                return ['hand over', winner_info_dict]
             else:
                 assert(self.round in [1,2,3])
                 self.advance_round()
@@ -256,7 +264,7 @@ class Table():
         # reset cost_to_play, min_bet
         self.cost_to_play = 0
         self.min_bet = self.big_blind
-        # reset players chips this round, BUT NOT chips_in_pot
+        # reset players chips_this_round, BUT NOT chips_in_pot
         for plyr in self.seat_order:
             self.plyr_dict[plyr].chips_this_round = 0
             # Reset left_to_act
@@ -268,23 +276,32 @@ class Table():
         for plyr in self.seat_order[1:] + [self.seat_order[0]]:
             if self.plyr_dict[plyr].stack > 0:
                 new_seats.append(plyr)
-            else:
+            else: # working here, this should 
                 self.plyr_dict.pop(plyr)
         self.seat_order = new_seats[:]
         
     # called by showdown(), break ties among same hand_rank
+    # cannot be destructive on state of table/plyr_dict,
+    # is called multiple times in one showdown when at least one player all-in,
+    # for each pot created
+    # also is comparing first max value to each comparison of tie_break
     def break_ties(self, plyrs):
+        dict_copy = self.plyr_dict.copy()
         while(True):
-            if self.plyr_dict[plyrs[0]].tie_break == []:
+            if dict_copy[plyrs[0]].tie_break == []:
                 return plyrs
-            max = self.plyr_dict[plyrs[0]].tie_break[0]
+            max = dict_copy[plyrs[0]].tie_break[0]
+            print('max ', max)
             for p in plyrs[:]:
-                if self.plyr_dict[p].tie_break[0] < max:
+                if dict_copy[p].tie_break[0] < max:
                     if p in plyrs:
                         plyrs.remove(p)
-                self.plyr_dict[p].tie_break = self.plyr_dict[p].tie_break[1:]
+            print('plyrs ', plyrs)
             if len(plyrs) == 1:
                 return plyrs
+            else:
+                for p in plyrs:
+                    dict_copy[p].tie_break = dict_copy[p].tie_break[1:]
     
     def reward(self, pot, plyrs):
         winner_info = dict((plyr, 0) for plyr in plyrs)
@@ -305,6 +322,7 @@ class Table():
     # Ends the hand, rewards players
     # Should prompt for next_hand with this
     def showdown(self, pots_plyrs_tup):
+        print('pots_plyrs_tup ', pots_plyrs_tup)
         main_dict = {}
         for p in self.in_hand:
             self.assign_hand_rank(p)
@@ -367,23 +385,3 @@ class Table():
         self.post_blinds()
         self.deck = deck.Deck()
         self.deal_hole_cards()
-
-############ TESTS #################
-if __name__=='__main__':
-    table = Table(2,1000,20)
-    for p in table.seat_order:
-        table.plyr_dict[p].human = 1
-    while(1):
-        sentinel = 1
-        while(sentinel):
-            #table.skip_all_in_plyr()
-            if len(table.left_to_act) > 0:
-                plyr = table.left_to_act[0]
-                print(table.get_legal_actions())
-                action = input('input action bet, check, fold, call, raise ')
-                amount = int(input('optional input amount '))
-                table.apply_action(plyr,action,amount)
-            if table.is_round_or_hand_over() == 'sentinel':
-                sentinel = 0
-    table.move_button_remove_chipless_players()
-# next_hand()

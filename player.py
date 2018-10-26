@@ -1,17 +1,11 @@
 from random import randrange
-# Players are instantiated in a dict belonging to a Table object
-# keys are the Player's name, values are the Player instance
 class Player():
     def __init__(self, stack=0):
         self.stack = stack
         self.hand = []
-        # tracks how many chips have been bet by a player this round, reset every round
         self.chips_this_round = 0
-        # tracks how many chips a player has at the begin of a hand
         self.begin_hand_chips = 0
-        # tracks how much player has contributed to a pot, reset every hand
         self.chips_in_pot = 0
-        # signify if instance is human or computer
         self.human = 1
         self.hand_rank = 0
         self.tie_break = []
@@ -32,7 +26,6 @@ class Player():
         self.chips_this_round += amount
         self.stack -= amount
     
-    # Reset player after hand(not round)
     def clean_player_after_hand(self):
         self.hand = []
         self.chips_this_round = 0
