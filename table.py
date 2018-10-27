@@ -281,10 +281,9 @@ class Table():
         self.seat_order = new_seats[:]
         
     # called by showdown(), break ties among same hand_rank
-    # cannot be destructive on state of table/plyr_dict,
-    # is called multiple times in one showdown when at least one player all-in,
-    # for each pot created
-    # also is comparing first max value to each comparison of tie_break
+    # working here BUG bug
+    # dict_copy with mutable attr messing stuff up, dict_copy.tie_break...
+    # fix by passing in plyr.tie_break lists instead of modifying copies
     def break_ties(self, plyrs):
         dict_copy = self.plyr_dict.copy()
         while(True):

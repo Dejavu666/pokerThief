@@ -100,9 +100,7 @@ def three_of_a_kind_finder(hand):
         return [max(threes)]+highcards
     return None
 
-# working here
-# BUG tie_break for one-pair not working
-# Too many tie_break vals being added to plyr.tie_break
+
 def one_pair_finder(hand):
     ranks = [card[0] for card in hand]
     highcards = []
