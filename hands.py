@@ -112,8 +112,9 @@ def one_pair_finder(hand):
             highcards.append(rank)
         elif ranks.count(rank) == 2:
             pairsof2.append(rank)
-    if len(pairsof2) >=1:
-        return [max(pairsof2)]+sorted(highcards,reverse=True)
+    highcards = sorted(highcards, reverse=True)
+    if len(pairsof2) >= 1:
+        return [max(pairsof2)]+highcards[:4]
     else:
         return None
 
