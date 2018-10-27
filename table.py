@@ -100,7 +100,7 @@ class Table():
         if len(bs) == 1:
             ihcpy = ih[:]
             plyr = bs[0]
-            ihcpy.remove(p)
+            ihcpy.remove(plyr)
             nbscth = max([pd[p].chips_in_pot for p in ihcpy])
             if pd[plyr].chips_in_pot > nbscth: # if plyr who contr most contr more than next most
                 amount = pd[plyr].chips_in_pot - nbscth
