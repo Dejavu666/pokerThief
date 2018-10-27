@@ -208,8 +208,8 @@ class Table():
             return ['hand over', winner_info_dict]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
-                pots_plyrs = self.create_pots()
-                winner_info_dict = self.showdown(pots_plyrs)
+                pots_plyrs_tup = self.create_pots()
+                winner_info_dict = self.showdown(pots_plyrs_tup)
                 return ['hand over', winner_info_dict]
             else:
                 assert(self.round in [1,2,3])
@@ -291,12 +291,15 @@ class Table():
             if dict_copy[plyrs[0]].tie_break == []:
                 return plyrs
             max = dict_copy[plyrs[0]].tie_break[0]
-            print('max ', max)
             for p in plyrs[:]:
+                print('player ', p)
+                print('hand ', self.plyr_dict[p].hand)
+                print('com_cards ', self.com_cards)
+                print('tie_break value ', max)
+                print('handrank value ', dict_copy[p].hand_rank)
                 if dict_copy[p].tie_break[0] < max:
                     if p in plyrs:
                         plyrs.remove(p)
-            print('plyrs ', plyrs)
             if len(plyrs) == 1:
                 return plyrs
             else:
@@ -326,7 +329,6 @@ class Table():
         main_dict = {}
         for p in self.in_hand:
             self.assign_hand_rank(p)
-            print(self.plyr_dict[p].hand_rank)
         for pot_plyr in pots_plyrs_tup:
             high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
             pot = pot_plyr[0]
@@ -385,3 +387,37 @@ class Table():
         self.post_blinds()
         self.deck = deck.Deck()
         self.deal_hole_cards()
+        
+
+
+# Make test suite to test for hand winner detection, tie break detection, ...
+if __name__ == "__main__":
+    t = Table(9, 400, 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 20)
+    t.apply_action(t.left_to_act[0], 'call', 10)
+    t.apply_action(t.left_to_act[0], 'check')
+    t.com_cards = [(10,'S'), (11,'S'), (12,'S'), (3,'H'), (3,'D')]
+    t.round = 4
+    t.left_to_act = []
+    # deck might have unreal values (five 3's for example)
+    t.plyr_dict[t.seat_order[0]].hand = [(13,'S'), (14,'S')] # completes straight(royal)flush
+    t.plyr_dict[t.seat_order[1]].hand = [(3,'S'), (3,'C')] # completes 4ofakind
+    t.plyr_dict[t.seat_order[2]].hand = [(10,'H'), (10,'D')] # full house
+    t.plyr_dict[t.seat_order[3]].hand = [(4,'S'), (2,'S')] # flush
+    t.plyr_dict[t.seat_order[4]].hand = [(13,'D'), (14,'D')] # straight
+    t.plyr_dict[t.seat_order[5]].hand = [(6,'D'), (3,'C')] # 3ofakind, tie_break has too many vals
+    t.plyr_dict[t.seat_order[6]].hand = [(12,'H'), (14,'D')] # 2pair
+    t.plyr_dict[t.seat_order[7]].hand = [(7,'D'), (14,'D')] # 1pair, tie_break has too many vals
+    t.plyr_dict[t.seat_order[8]].hand = [(4,'D'), (9,'D')] # 1pair with lower tiebreak
+    for i,p in enumerate(t.seat_order):
+        t.assign_hand_rank(p)
+        print('seat order ', i)
+        print(t.plyr_dict[p].hand_rank)
+        print(t.plyr_dict[p].tie_break)
+    print(t.showdown(t.create_pots()))
