@@ -1,4 +1,8 @@
-# error in _raise, assert amount >= min_bet, this comes from when one player can reraise and has more than enough chips to cover the other player, but not enough to make a legal reraise as if the player could respond
+# After hand over, display winner info in gui
+
+# Instead of recreating player images in tablewindow, just move dealer button
+
+# One player remains, end screen/new table
 
 
 import player, deck, hands
@@ -180,7 +184,7 @@ class Table():
         self.left_to_act.remove(plyr)
 
     def _raise(self, plyr, raise_amount):
-        assert(raise_amount >= self.min_bet)
+        assert(raise_amount >= min(self.plyr_dict[plyr].stack, self.min_bet))
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
         assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
         self.pot += raise_amount+true_cost
@@ -207,7 +211,7 @@ class Table():
                 
     def is_round_or_hand_over(self):
         if len(self.in_hand) == 1: # only one player
-            winner_info_dict = self.reward(self.pot, self.in_hand[0])
+            winner_info_dict = self.reward(self.pot, [self.in_hand[0]])
             return ['hand over', winner_info_dict]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
