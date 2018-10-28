@@ -1,3 +1,6 @@
+# error in _raise, assert amount >= min_bet, this comes from when one player can reraise and has more than enough chips to cover the other player, but not enough to make a legal reraise as if the player could respond
+
+
 import player, deck, hands
 from random import shuffle
 
@@ -284,26 +287,30 @@ class Table():
     # working here BUG bug
     # dict_copy with mutable attr messing stuff up, dict_copy.tie_break...
     # fix by passing in plyr.tie_break lists instead of modifying copies
-    def break_ties(self, plyrs):
-        dict_copy = self.plyr_dict.copy()
+    
+    # input = [(player2,[14,12,11,9,3]),...]
+    # output = ['player2',...]
+    def break_ties(self, plyr_tb_tups):
+        plyrs = [x[0] for x in plyr_tb_tups]
+        tbs = [x[1] for x in plyr_tb_tups]
         while(True):
-            if dict_copy[plyrs[0]].tie_break == []:
+            if tbs[0] == []: # no more elements to tiebreak
                 return plyrs
-            max = dict_copy[plyrs[0]].tie_break[0]
-            for p in plyrs[:]:
+            max = tbs[0][0]
+            for i,p in enumerate(plyrs[:]):
                 print('player ', p)
                 print('hand ', self.plyr_dict[p].hand)
                 print('com_cards ', self.com_cards)
                 print('tie_break value ', max)
-                print('handrank value ', dict_copy[p].hand_rank)
-                if dict_copy[p].tie_break[0] < max:
+                print('handrank value ', self.plyr_dict[p].hand_rank)
+                if tbs[i][0] < max:
                     if p in plyrs:
                         plyrs.remove(p)
             if len(plyrs) == 1:
                 return plyrs
             else:
-                for p in plyrs:
-                    dict_copy[p].tie_break = dict_copy[p].tie_break[1:]
+                for i,tblst in enumerate(tbs):
+                    tbs[i] = tblst[1:]
     
     def reward(self, pot, plyrs):
         winner_info = dict((plyr, 0) for plyr in plyrs)
@@ -331,8 +338,10 @@ class Table():
         for pot_plyr in pots_plyrs_tup:
             high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
             pot = pot_plyr[0]
-            plyrs = pot_plyr[1]
-            dict = self.reward(pot, self.break_ties([p for p in plyrs if self.plyr_dict[p].hand_rank == high]))
+            highplyrs = [p for p in pot_plyr[1] if self.plyr_dict[p].hand_rank == high]
+            tbs = [self.plyr_dict[p].tie_break[:] for p in highplyrs]
+            plyrs_tbs_tups = [(highplyrs[i], tbs[i]) for i in range(len(highplyrs))]
+            dict = self.reward(pot, self.break_ties(plyrs_tbs_tups))
             for k in dict.keys():
                 if k not in main_dict.keys():
                     main_dict[k] = dict[k]
