@@ -1,7 +1,12 @@
+# display_winners working but delays too long, display then next_hand
+
+
+
 import table
 import tkinter as tk
 from PIL import Image, ImageTk
 import sys
+
 
 class Player_window(tk.Frame):
     def __init__(self,parent):
@@ -61,7 +66,6 @@ class Player_window(tk.Frame):
         
     def create_current_plyr_image(self,plyr):
         self.plyrMsg.configure(text='What will '+plyr+' do?')
-        print(room.table.plyr_dict[plyr].hand)
         self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[0]+'.gif'))
         self.card1.configure(image=self.cardimg1)
         self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
@@ -112,11 +116,11 @@ class Player_window(tk.Frame):
     def call(self, plyr, amount=0):
         amount = min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)
         room.table_window.update_table_window_cards_and_chips()
-        self.destroyButtons()
+        self.destroy_buttons()
         maybe_winner = room.table.apply_action(plyr, 'call', amount)
         if maybe_winner:
-            # display winner info somewhere?, player_window or table_window?
-            print(maybe_winner)
+#            self.display_winners(maybe_winner[1])
+            self.after(2000, self.display_winners, maybe_winner[1])
             self.next_hand()
         else:
             room.player_window.get_actions()
@@ -129,9 +133,10 @@ class Player_window(tk.Frame):
             print('Raise gui error')
         room.table_window.update_table_window_cards_and_chips()
         maybe_winner = room.table.apply_action(plyr, 'raise', amount)
-        self.destroyButtons()
+        self.destroy_buttons()
         if maybe_winner:
-            print(maybe_winner)
+#            self.display_winners(maybe_winner[1])
+            self.after(2000, self.display_winners, maybe_winner[1])
             self.next_hand()
         else:
             room.player_window.get_actions()
@@ -141,9 +146,10 @@ class Player_window(tk.Frame):
         room.table_window.update_table_window_cards_and_chips()
         room.imageList[plyr].c1.configure(image=room.no_card)
         room.imageList[plyr].c2.configure(image=room.no_card)
-        self.destroyButtons()
+        self.destroy_buttons()
         if maybe_winner:
-            print(maybe_winner)
+#            self.display_winners(maybe_winner[1])
+            self.after(2000, self.display_winners, maybe_winner[1])
             self.next_hand()
         else:
             room.player_window.get_actions()
@@ -155,9 +161,10 @@ class Player_window(tk.Frame):
             pass
         maybe_winner = room.table.apply_action(plyr, 'bet', amount)
         room.table_window.update_table_window_cards_and_chips()
-        self.destroyButtons()
+        self.destroy_buttons()
         if maybe_winner:
-            print(maybe_winner)
+#            self.display_winners(maybe_winner[1])
+            self.after(2000, self.display_winners, maybe_winner[1])
             self.next_hand()
         else:
             room.player_window.get_actions()
@@ -165,9 +172,10 @@ class Player_window(tk.Frame):
     def check(self,plyr):
         maybe_winner = room.table.apply_action(plyr, 'check')
         room.table_window.update_table_window_cards_and_chips()
-        self.destroyButtons()
+        self.destroy_buttons()
         if maybe_winner:
-            print(maybe_winner)
+#            self.display_winners(maybe_winner[1])
+            self.after(2000, self.display_winners, maybe_winner[1])
             self.next_hand()
         else:
             room.player_window.get_actions()
@@ -182,9 +190,9 @@ class Player_window(tk.Frame):
         for plyr in room.table.seat_order:
             room.imageList[plyr].c1.configure(image=room.card_back)
             room.imageList[plyr].c2.configure(image=room.card_back)
-        room.player_window.populate(room.table.left_to_act[0], room.table.get_actions())
+        self.get_actions()
         
-    def destroyButtons(self):
+    def destroy_buttons(self):
         try:
             self.b1.destroy()
             self.b2.destroy()
@@ -194,6 +202,20 @@ class Player_window(tk.Frame):
             self.card2.configure(image=None)
         except:
             pass
+            
+            
+    def display_winners(self, winner_dict):
+        if winner_dict != {}:
+            wnr, amt = winner_dict.popitem()
+            self.plyrMsg.configure(text= wnr + ' wins ' + str(amt))
+            self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[0]+'.gif'))
+            self.card1.configure(image=self.cardimg1)
+            self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[1]+'.gif'))
+            self.card2.configure(image=self.cardimg2)
+            room.imageList[wnr].c1.configure(image=self.cardimg1)
+            room.imageList[wnr].c2.configure(image=self.cardimg2)
+            self.after(3300, self.display_winners, winner_dict)
+
     
 class Start_game_bar(tk.Frame):
     def __init__(self,parent):
