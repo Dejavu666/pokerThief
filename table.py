@@ -1,10 +1,3 @@
-# After hand over, display winner info in gui
-
-# Instead of recreating player images in tablewindow, just move dealer button
-
-# One player remains, end screen/new table
-
-
 import player, deck, hands
 from random import shuffle
 
@@ -300,14 +293,15 @@ class Table():
         while(True):
             if tbs[0] == []: # no more elements to tiebreak
                 return plyrs
-            max = tbs[0][0]
+        # getting random first value for max, need to get actual highest tb val among plyrs
+            mx = max([tbs[n][0] for n in range(len(tbs))]) # bug here, working here, BUG
             for i,p in enumerate(plyrs[:]):
                 print('player ', p)
                 print('hand ', self.plyr_dict[p].hand)
                 print('com_cards ', self.com_cards)
-                print('tie_break value ', max)
+                print('tie_break value ', mx)
                 print('handrank value ', self.plyr_dict[p].hand_rank)
-                if tbs[i][0] < max:
+                if tbs[i][0] < mx:
                     if p in plyrs:
                         plyrs.remove(p)
             if len(plyrs) == 1:
@@ -433,3 +427,15 @@ if __name__ == "__main__":
         print(t.plyr_dict[p].hand_rank)
         print(t.plyr_dict[p].tie_break)
     print(t.showdown(t.create_pots()))
+
+##############################################
+# TEST SUITE break_ties()
+    # input = [(player2,[14,12,11,9,3]),...]
+    # output = ['player2',...]
+    # need to confirm not getting random tie_break val for first max, get actual max
+    
+    # for straights
+    # make this input: [('player9',[10]), ('player3',[11]), ('player4',[10]), ('player1',[9]), ('player2',[10])]
+    newTable = Table(9,200,20)
+    assert(newTable.break_ties([('player9',[10]), ('player3',[11]), ('player4',[10]), ('player1',[9]), ('player2',[10])]) \
+    == ['player3'])

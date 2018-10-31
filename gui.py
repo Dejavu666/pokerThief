@@ -1,5 +1,29 @@
-# display_winners working but delays too long, display then next_hand
+# TO DO
 
+# URGENT - tie_break for straights not working, gave tie_break val of 10 to plyr with hand (11,someCard)
+# 7,8,9,10 on board, two players with (6,someCard) had tie_break val of 10
+
+# URGENT - multiple next_hands() fired off with .after() on multi-showdowns, maybe fixed
+
+# graphical glitch between label configure in playerwindow after display_winners before next_hand player info
+# something else is changed, label briefly displays some info
+
+# auto-check / skip all-in, currently gives 'check only option'
+
+# post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
+
+# Instead of recreating player images in tablewindow, just move dealer button
+
+# One player remains, end screen/new table
+
+# next_hand() create prompt instead of moving directly into hand
+# show_winners delays a little too long...
+# Tell hand type, highlight community cards used in hand
+# change player images
+# add single-player versus multiplayer bots
+# start bot shim with return random action for bot
+# change on init to create one human, N bots
+# change start game popup to "choose num opponents"
 
 
 import table
@@ -119,8 +143,7 @@ class Player_window(tk.Frame):
         self.destroy_buttons()
         maybe_winner = room.table.apply_action(plyr, 'call', amount)
         if maybe_winner:
-#            self.display_winners(maybe_winner[1])
-            self.after(2000, self.display_winners, maybe_winner[1])
+            self.display_winners(maybe_winner[1])
         else:
             room.player_window.get_actions()
         
@@ -134,8 +157,7 @@ class Player_window(tk.Frame):
         maybe_winner = room.table.apply_action(plyr, 'raise', amount)
         self.destroy_buttons()
         if maybe_winner:
-#            self.display_winners(maybe_winner[1])
-            self.after(2000, self.display_winners, maybe_winner[1])
+            self.display_winners(maybe_winner[1])
         else:
             room.player_window.get_actions()
         
@@ -146,8 +168,7 @@ class Player_window(tk.Frame):
         room.imageList[plyr].c2.configure(image=room.no_card)
         self.destroy_buttons()
         if maybe_winner:
-#            self.display_winners(maybe_winner[1])
-            self.after(2000, self.display_winners, maybe_winner[1])
+            self.display_winners(maybe_winner[1])
         else:
             room.player_window.get_actions()
         
@@ -160,8 +181,7 @@ class Player_window(tk.Frame):
         room.table_window.update_table_window_cards_and_chips()
         self.destroy_buttons()
         if maybe_winner:
-#            self.display_winners(maybe_winner[1])
-            self.after(2000, self.display_winners, maybe_winner[1])
+            self.display_winners(maybe_winner[1])
         else:
             room.player_window.get_actions()
     
@@ -170,8 +190,7 @@ class Player_window(tk.Frame):
         room.table_window.update_table_window_cards_and_chips()
         self.destroy_buttons()
         if maybe_winner:
-#            self.display_winners(maybe_winner[1])
-            self.after(2000, self.display_winners, maybe_winner[1])
+            self.display_winners(maybe_winner[1])
         else:
             room.player_window.get_actions()
             
@@ -202,6 +221,7 @@ class Player_window(tk.Frame):
     def display_winners(self, winner_dict):
         if winner_dict != {}:
             wnr, amt = winner_dict.popitem()
+            print('DEBUG ' + wnr + ' wins ' + str(amt))
             self.plyrMsg.configure(text= wnr + ' wins ' + str(amt))
             self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[0]+'.gif'))
             self.card1.configure(image=self.cardimg1)
@@ -209,9 +229,9 @@ class Player_window(tk.Frame):
             self.card2.configure(image=self.cardimg2)
             room.imageList[wnr].c1.configure(image=self.cardimg1)
             room.imageList[wnr].c2.configure(image=self.cardimg2)
-            self.after(3300, self.display_winners, winner_dict)
+            self.after(3000, self.display_winners, winner_dict)
         else:
-            self.next_hand()
+            self.after(3000, self.next_hand)
 
     
 class Start_game_bar(tk.Frame):
