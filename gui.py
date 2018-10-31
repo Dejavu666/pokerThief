@@ -121,7 +121,6 @@ class Player_window(tk.Frame):
         if maybe_winner:
 #            self.display_winners(maybe_winner[1])
             self.after(2000, self.display_winners, maybe_winner[1])
-            self.next_hand()
         else:
             room.player_window.get_actions()
         
@@ -137,7 +136,6 @@ class Player_window(tk.Frame):
         if maybe_winner:
 #            self.display_winners(maybe_winner[1])
             self.after(2000, self.display_winners, maybe_winner[1])
-            self.next_hand()
         else:
             room.player_window.get_actions()
         
@@ -150,7 +148,6 @@ class Player_window(tk.Frame):
         if maybe_winner:
 #            self.display_winners(maybe_winner[1])
             self.after(2000, self.display_winners, maybe_winner[1])
-            self.next_hand()
         else:
             room.player_window.get_actions()
         
@@ -165,7 +162,6 @@ class Player_window(tk.Frame):
         if maybe_winner:
 #            self.display_winners(maybe_winner[1])
             self.after(2000, self.display_winners, maybe_winner[1])
-            self.next_hand()
         else:
             room.player_window.get_actions()
     
@@ -176,7 +172,6 @@ class Player_window(tk.Frame):
         if maybe_winner:
 #            self.display_winners(maybe_winner[1])
             self.after(2000, self.display_winners, maybe_winner[1])
-            self.next_hand()
         else:
             room.player_window.get_actions()
             
@@ -215,6 +210,8 @@ class Player_window(tk.Frame):
             room.imageList[wnr].c1.configure(image=self.cardimg1)
             room.imageList[wnr].c2.configure(image=self.cardimg2)
             self.after(3300, self.display_winners, winner_dict)
+        else:
+            self.next_hand()
 
     
 class Start_game_bar(tk.Frame):
