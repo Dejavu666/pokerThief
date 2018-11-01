@@ -1,23 +1,23 @@
 # TO DO
 
-# URGENT - tie_break for straights not working, gave tie_break val of 10 to plyr with hand (11,someCard)
-# 7,8,9,10 on board, two players with (6,someCard) had tie_break val of 10
+# URGENT - 4 plyrs, utg all-in, utg+1/D call, sb fold, bb fold
+# bug in small stacks table.py line 117, val of p.begin_hand_chips maybe wrong
+# was wrong because table.in_hand didn't init until end of post_blinds, so plyrs didnt receive begin_hand_chips vals
+# so this is fixed, but table.in_hand gets init'ed mult times, should clean up
 
-# URGENT - multiple next_hands() fired off with .after() on multi-showdowns, maybe fixed
+# move dealer button instead of reseating players
 
 # graphical glitch between label configure in playerwindow after display_winners before next_hand player info
 # something else is changed, label briefly displays some info
+# prob caused by reseating players
 
 # auto-check / skip all-in, currently gives 'check only option'
 
 # post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
 
-# Instead of recreating player images in tablewindow, just move dealer button
-
 # One player remains, end screen/new table
 
 # next_hand() create prompt instead of moving directly into hand
-# show_winners delays a little too long...
 # Tell hand type, highlight community cards used in hand
 # change player images
 # add single-player versus multiplayer bots
@@ -219,16 +219,16 @@ class Player_window(tk.Frame):
             
             
     def display_winners(self, winner_dict):
+        wnr, amt = winner_dict.popitem()
+        print('DEBUG ' + wnr + ' wins ' + str(amt))
+        self.plyrMsg.configure(text= wnr + ' wins ' + str(amt))
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[0]+'.gif'))
+        self.card1.configure(image=self.cardimg1)
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[1]+'.gif'))
+        self.card2.configure(image=self.cardimg2)
+        room.imageList[wnr].c1.configure(image=self.cardimg1)
+        room.imageList[wnr].c2.configure(image=self.cardimg2)
         if winner_dict != {}:
-            wnr, amt = winner_dict.popitem()
-            print('DEBUG ' + wnr + ' wins ' + str(amt))
-            self.plyrMsg.configure(text= wnr + ' wins ' + str(amt))
-            self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[0]+'.gif'))
-            self.card1.configure(image=self.cardimg1)
-            self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[1]+'.gif'))
-            self.card2.configure(image=self.cardimg2)
-            room.imageList[wnr].c1.configure(image=self.cardimg1)
-            room.imageList[wnr].c2.configure(image=self.cardimg2)
             self.after(3000, self.display_winners, winner_dict)
         else:
             self.after(3000, self.next_hand)

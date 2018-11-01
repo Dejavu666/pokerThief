@@ -1,5 +1,6 @@
 import player, deck, hands
 from random import shuffle
+from copy import deepcopy
 
 
 class Table():
@@ -37,8 +38,10 @@ class Table():
     
     # ?maybe account for division of odd numbers / split chips?
     def post_blinds(self):
+        self.in_hand = self.seat_order[:]
         for p in self.in_hand:
             self.plyr_dict[p].begin_hand_chips = self.plyr_dict[p].stack
+            print('spec DEBUG ' + p + str(self.plyr_dict[p].begin_hand_chips))
         if len(self.seat_order) == 2:
             # helper function, blind order is different for 2players
             self.post_blinds_2player()
@@ -93,7 +96,7 @@ class Table():
     # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
     def create_pots(self):
-        pd = self.plyr_dict.copy()
+        pd = deepcopy(self.plyr_dict)
         ih = self.in_hand[:]
         # first return excess chips to chip leader, if ncsry
         bs = [p for p in ih if pd[p].chips_in_pot == max([pd[k].chips_in_pot for k in ih])]
@@ -112,6 +115,7 @@ class Table():
         if len(all_in) == 0:
             return [(self.pot, self.in_hand[:])]
         print('DEBUG all-in ', all_in)
+        # working here, BUG , bug
         small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
         print('DEBUG small_stacks ', small_stacks)
         sscpy = small_stacks[:]
