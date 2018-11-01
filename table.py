@@ -180,6 +180,14 @@ class Table():
         if plyr in self.left_to_act:
             self.left_to_act.remove(plyr)
     
+    def all_in(self, plyr, amount):
+        assert(self.plyr_dict[plyr].stack == amount)
+        self.pot += amount
+        self.plyr_dict[plyr].contribute_chips(amount)
+        self.left_to_act.remove(plyr)
+        self.repop_left_to_act(plyr)
+
+    
     def call(self, plyr, amount):
         assert(amount <= self.plyr_dict[plyr].stack)
         self.pot += amount
@@ -192,8 +200,10 @@ class Table():
         # working here, BUG, bug
         print(plyr)
         print(raise_amount)
+        print(self.min_bet)
         assert(raise_amount >= min(self.plyr_dict[plyr].stack, self.min_bet))
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
+        print('true cost ' + str(true_cost))
         assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
         self.pot += raise_amount+true_cost
         self.plyr_dict[plyr].contribute_chips(raise_amount+true_cost)
@@ -244,10 +254,15 @@ class Table():
         elif self.plyr_dict[p].chips_this_round == self.cost_to_play: # if table is open, bet/check/fold
             return ('check_options',('bet',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack),\
             ('check'), ('fold'), p)
+        # Table is bet, p.stack is enough for call, not enough for legal raise
+        elif (self.plyr_dict[p].chips_this_round < self.cost_to_play) and (self.plyr_dict[p].stack >= self.cost_to_play - self.plyr_dict[p].chips_this_round) and (self.plyr_dict[p].stack < self.cost_to_play - self.plyr_dict[p].chips_this_round + self.min_bet):
+            return ('call_all_in_options', ('call',min(self.plyr_dict[p].stack,self.cost_to_play-self.plyr_dict[p].chips_this_round)),\
+            ('all-in',self.plyr_dict[p].stack),\
+            ('fold'), p)
         # Call Raise Fold, table is bet
         else:
             return ('call_options',('call',min(self.plyr_dict[p].stack,self.cost_to_play-self.plyr_dict[p].chips_this_round)),\
-             ('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack-self.cost_to_play+self.plyr_dict[p].chips_this_round),\
+            ('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack-self.cost_to_play+self.plyr_dict[p].chips_this_round),\
              ('fold'), p)
         
     def apply_action(self, plyr, action, amount=0):
@@ -261,6 +276,8 @@ class Table():
             self.bet(plyr, amount)
         elif action == 'call':
             self.call(plyr, amount)
+        elif action == 'all_in':
+            self.all_in(plyr, amount)
         maybe_winner_info = self.is_round_or_hand_over()
         if maybe_winner_info:
             return maybe_winner_info

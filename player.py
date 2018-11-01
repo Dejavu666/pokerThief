@@ -56,6 +56,7 @@ class Player():
                 return ('fold',0)
 #********* BOT STUFF ******************************************************************************
     def get_random_check_action(self,p,table):
+        print('rand check act table.min_bet ' + str(table.min_bet))
         if table.min_bet >= table.plyr_dict[p].stack:
             amount = table.plyr_dict[p].stack
         else:
@@ -69,15 +70,15 @@ class Player():
         if choice == 0:
             return ("fold",0)
         elif choice == 1:
-            amount = min(table.plyr_dict[p].stack, table.cost_to_play-table.plyr_dict[p].chips_this_round)
-            return ("call", amount)
+            return ("call", 0)
         else:
             if table.cost_to_play - table.plyr_dict[p].chips_this_round >= table.plyr_dict[p].stack:
                 amount = table.plyr_dict[p].stack
             else:
                 # working here, bug, BUG
                 # bound this correctly
-                amount = randrange(table.cost_to_play-table.plyr_dict[p].chips_this_round, table.plyr_dict[p].stack)
+                true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
+                amount = randrange(table.cost_to_play-table.plyr_dict[p].chips_this_round, table.plyr_dict[p].stack-true_cost)
             return ("raise", amount)
 # 
 #     
