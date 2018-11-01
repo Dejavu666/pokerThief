@@ -167,7 +167,8 @@ class Table():
                 self.left_to_act.append(plyr)
 
     def bet(self, plyr, amount):
-        assert(amount >= self.min_bet)
+        if self.plyr_dict[plyr].stack >= self.min_bet:
+            assert(amount >= self.min_bet)
         assert(amount <= self.plyr_dict[plyr].stack)
         self.pot += amount
         self.plyr_dict[plyr].contribute_chips(amount)
@@ -186,6 +187,11 @@ class Table():
         self.left_to_act.remove(plyr)
 
     def _raise(self, plyr, raise_amount):
+        print('HERE')
+        # this is happening when more chips than true cost but not enough for legal raise
+        # working here, BUG, bug
+        print(plyr)
+        print(raise_amount)
         assert(raise_amount >= min(self.plyr_dict[plyr].stack, self.min_bet))
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
         assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)

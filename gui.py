@@ -1,13 +1,14 @@
 # TO DO
 
-# do bots before minor gui changes, return rand action as if button press event, send to apply_action()
-# bot err
-# /table.py", line 255, in apply_action
-#     self.bet(plyr, amount)
-#/table.py", line 170, in bet
-#     assert(amount >= self.min_bet)
-# AssertionError
 
+# bot raise assert errs from 'more chips than true cost, not enough for legal raise'
+# bot errs, check rand bound ranges for legality from return_rand_action funcs
+
+# bot err
+# table.py", line 250, in apply_action
+ #   self._raise(plyr, amount)
+#table.py", line 192, in _raise
+#    assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
 
 
 # bug in small stacks table.py line 117, val of p.begin_hand_chips maybe wrong

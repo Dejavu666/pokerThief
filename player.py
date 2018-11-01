@@ -38,7 +38,6 @@ class Player():
         if self.chips_this_round == cost2play:# table is open
             # placeholder for testing
             # gets random bot action between possible actions
-            # AI INTERFACE GOES HERE
             randval = randrange(0,1)
             if randval == 0:
                 amount = randrange(bb,self.stack)
@@ -64,17 +63,22 @@ class Player():
         return ("check",0) if randrange(0,2) else ("bet",amount)
     # fold, call, or raise
     def get_random_call_action(self,p,table):
+        # working here, bug BUG
+        # if raise and not enough for legal raise but all-in
         choice = randrange(0,3)
         if choice == 0:
             return ("fold",0)
         elif choice == 1:
-            return ("call",0)
+            amount = min(table.plyr_dict[p].stack, table.cost_to_play-table.plyr_dict[p].chips_this_round)
+            return ("call", amount)
         else:
-            if table.cost_to_play >= table.plyr_dict[p].stack:
+            if table.cost_to_play - table.plyr_dict[p].chips_this_round >= table.plyr_dict[p].stack:
                 amount = table.plyr_dict[p].stack
             else:
-                amount = randrange(table.cost_to_play, table.plyr_dict[p].stack)
-            return ("raise",amount)
+                # working here, bug, BUG
+                # bound this correctly
+                amount = randrange(table.cost_to_play-table.plyr_dict[p].chips_this_round, table.plyr_dict[p].stack)
+            return ("raise", amount)
 # 
 #     
 #     def callingStationAction(self):
