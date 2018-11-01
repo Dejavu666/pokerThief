@@ -16,9 +16,14 @@ class Table():
         self.plyr_dict = \
         {'player'+str(i+1) : player.Player(stack=num_chips) for i in range(num_players)}
         
-        self.plyr_dict['player1'].human = 1
-        
         self.seat_order = [player for player in self.plyr_dict.keys()]
+        
+        for p in self.seat_order:
+            if p != 'player1':
+                self.plyr_dict[p].human = 0
+            else:
+                self.plyr_dict[p].human = 1
+        
         shuffle(self.seat_order)
         
         self.round = 1
@@ -72,6 +77,7 @@ class Table():
         
     # post_blinds for only 2 players, helper func called by post_blinds()
     def post_blinds_2player(self):
+        self.in_hand = self.seat_order[:]
         # dealer enough for SB
         if self.plyr_dict[self.seat_order[0]].stack >= self.big_blind//2:
             self.plyr_dict[self.seat_order[0]].contribute_chips(self.big_blind//2)
@@ -90,7 +96,6 @@ class Table():
                 self.plyr_dict[self.seat_order[1]].stack)
         # Set order of action, players in hand, cost_to_play
         self.left_to_act = self.seat_order[:]
-        self.in_hand = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
     # Creates input for showdown() from table state at end of hand

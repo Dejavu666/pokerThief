@@ -1,9 +1,24 @@
 # TO DO
 
-# URGENT - 4 plyrs, utg all-in, utg+1/D call, sb fold, bb fold
+# do bots before minor gui changes, return rand action as if button press event, send to apply_action()
+# bot err
+# /table.py", line 255, in apply_action
+#     self.bet(plyr, amount)
+#/table.py", line 170, in bet
+#     assert(amount >= self.min_bet)
+# AssertionError
+
+
+
 # bug in small stacks table.py line 117, val of p.begin_hand_chips maybe wrong
 # was wrong because table.in_hand didn't init until end of post_blinds, so plyrs didnt receive begin_hand_chips vals
 # so this is fixed, but table.in_hand gets init'ed mult times, should clean up
+# maybe just fix post_blinds period, it is old
+
+# fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
+# or circle or maybe rectangle
+# ideally the distance from each plyr to the next is the same no matter the number of plyrs
+# ie, 2 plyrs are seated opposite the oval, 3 plyrs would divide the oval into thirds, ...
 
 # move dealer button instead of reseating players
 
@@ -99,8 +114,8 @@ class Player_window(tk.Frame):
     def createBotPlayerImage(self,plyr):
         self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
         # WORKING HERE
-        self.card1.configure(image=room.cardBack)
-        self.card2.configure(image=room.cardBack)
+        self.card1.configure(image=room.card_back)
+        self.card2.configure(image=room.card_back)
 
     # Called by get_actions(), figures out what buttons/images in player_window
     def populate(self, plyr, options):
@@ -109,16 +124,16 @@ class Player_window(tk.Frame):
             self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
             self.createBotPlayerImage(plyr)
             # If pot is open
-            if room.table.plyr_dict[plyr].inFront == room.table.costToPlay:
+            if room.table.plyr_dict[plyr].chips_this_round == room.table.cost_to_play:
                 # do i need to pass the table object or can i refer to it from bot/player instance?
-                botAction, maybeAmount = room.table.plyr_dict[plyr].getRandomCheckAction(plyr,room.table)
+                botAction, maybeAmount = room.table.plyr_dict[plyr].get_random_check_action(plyr,room.table)
                 if botAction == 'check':
                     self.check(plyr)
                 else:
                     self.bet(plyr,maybeAmount)
             # pot is not open
             else:
-                botAction, maybeAmount = room.table.plyr_dict[plyr].getRandomCallAction(plyr,room.table)
+                botAction, maybeAmount = room.table.plyr_dict[plyr].get_random_call_action(plyr,room.table)
                 if botAction == 'call':
                     self.call(plyr)
                 elif botAction == 'raise':

@@ -55,31 +55,26 @@ class Player():
                 return ('raise', amount)
             elif randval == 2:
                 return ('fold',0)
-
-
-
 #********* BOT STUFF ******************************************************************************
-# from random import randrange
-    # check or bet
-#     def getRandomCheckAction(self,plyr,table):
-#         if table.minBet >= table.plyrDct[plyr].stack:
-#             amount = table.plyrDct[plyr].stack
-#         else:
-#             amount = randrange(table.minBet, table.plyrDct[plyr].stack)
-#         return ("check",0) if randrange(0,2) else ("bet",amount)
-#     # fold, call, or raise
-#     def getRandomCallAction(self,plyr,table):
-#         choice = randrange(0,3)
-#         if choice == 0:
-#             return ("fold",0)
-#         elif choice == 1:
-#             return ("call",0)
-#         else:
-#             if table.costToPlay >= table.plyrDct[plyr].stack:
-#                 amount = table.plyrDct[plyr].stack
-#             else:
-#                 amount = randrange(table.costToPlay, table.plyrDct[plyr].stack)
-#             return ("raise",amount)
+    def get_random_check_action(self,p,table):
+        if table.min_bet >= table.plyr_dict[p].stack:
+            amount = table.plyr_dict[p].stack
+        else:
+            amount = randrange(table.min_bet, table.plyr_dict[p].stack)
+        return ("check",0) if randrange(0,2) else ("bet",amount)
+    # fold, call, or raise
+    def get_random_call_action(self,p,table):
+        choice = randrange(0,3)
+        if choice == 0:
+            return ("fold",0)
+        elif choice == 1:
+            return ("call",0)
+        else:
+            if table.cost_to_play >= table.plyr_dict[p].stack:
+                amount = table.plyr_dict[p].stack
+            else:
+                amount = randrange(table.cost_to_play, table.plyr_dict[p].stack)
+            return ("raise",amount)
 # 
 #     
 #     def callingStationAction(self):
