@@ -1,7 +1,7 @@
 # TO DO
 
 # don't allow fold when all-in for bots 'auto-check when all-in'
-# c DEBUG player4236
+
 # spec DEBUG player1445
 # spec DEBUG player3110
 # botCallAction maybeAmount all_in0
@@ -25,16 +25,13 @@
 # 95
 # true cost 95
 # Exception in Tkinter callback
-# Traceback (most recent call last):
-#   File "/Users/crazyfox/anaconda3/lib/python3.6/tkinter/__init__.py", line 1699, in __call__
-#     return self.func(*args)
 #   File "gui.py", line 107, in <lambda>
 #     self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
 #   File "gui.py", line 193, in Raise
 #     maybe_winner = room.table.apply_action(plyr, 'raise', amount)
-#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 269, in apply_action
+# table.py", line 269, in apply_action
 #     self._raise(plyr, amount)
-#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 207, in _raise
+#table.py", line 207, in _raise
 #     assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
 
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
