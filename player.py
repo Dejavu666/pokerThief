@@ -63,22 +63,21 @@ class Player():
             amount = randrange(table.min_bet, table.plyr_dict[p].stack)
         return ("check",0) if randrange(0,2) else ("bet",amount)
     # fold, call, or raise
+    
     def get_random_call_action(self,p,table):
+        true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
         # working here, bug BUG
-        # if raise and not enough for legal raise but all-in
         choice = randrange(0,3)
         if choice == 0:
             return ("fold",0)
         elif choice == 1:
             return ("call", 0)
         else:
-            if table.cost_to_play - table.plyr_dict[p].chips_this_round >= table.plyr_dict[p].stack:
-                amount = table.plyr_dict[p].stack
+            # if not enough for legal raise
+            if table.plyr_dict[p].stack-true_cost <= table.plyr_dict[p].stack:
+                return ('all_in',0)
             else:
-                # working here, bug, BUG
-                # bound this correctly
-                true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
-                amount = randrange(table.cost_to_play-table.plyr_dict[p].chips_this_round, table.plyr_dict[p].stack-true_cost)
+                amount = randrange(true_cost, table.plyr_dict[p].stack-true_cost)
             return ("raise", amount)
 # 
 #     

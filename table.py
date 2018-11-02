@@ -172,7 +172,7 @@ class Table():
         assert(amount <= self.plyr_dict[plyr].stack)
         self.pot += amount
         self.plyr_dict[plyr].contribute_chips(amount)
-        self.cost_to_play = amount
+        self.cost_to_play += amount
         self.min_bet = amount
         self.repop_left_to_act(plyr)
         
@@ -240,14 +240,13 @@ class Table():
                 assert(self.round in [1,2,3])
                 self.advance_round()
     
-    # Returns legal actions of next player left to act
-    # should maybe skip all-in here
+    # Returns legal actions of next player left to act with bounds on legal chip amounts
     def get_actions(self):
         p = self.left_to_act[0]
         if self.plyr_dict[p].stack == 0:
             return ('all-in',('check'))
-        # Special BB options
-        if self.is_bb_option_avail(p) == True:
+        # Special BB options, what about less than legal raise amounts
+        elif self.is_bb_option_avail(p) == True:
             return ('bb_options',('raise',min(self.plyr_dict[p].stack,self.min_bet),self.plyr_dict[p].stack),\
             ('check'),('fold'), p)
         # Check Bet Fold, table is open

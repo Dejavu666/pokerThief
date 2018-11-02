@@ -1,13 +1,41 @@
 # TO DO
 
 # don't allow fold when all-in for bots 'auto-check when all-in'
-
-# 196    assert(raise_amount >= min(self.plyr_dict[plyr].stack, self.min_bet))
-
-
-# does raise receive true raise cost or raise val?
-
-# sb with 21 chips bot 2 plyr, attempts raise fails assert, less than legal raise
+# c DEBUG player4236
+# spec DEBUG player1445
+# spec DEBUG player3110
+# botCallAction maybeAmount all_in0
+# botCallAction maybeAmount all_in0
+# botCallAction maybeAmount all_in0
+# DEBUG player1 wins 30
+# spec DEBUG player4226
+# spec DEBUG player1455
+# spec DEBUG player3110
+# spec DEBUG player29
+# botCallAction maybeAmount fold0
+# botCallAction maybeAmount call0
+# rand check act table.min_bet 20
+# botCheckAction maybeAmount bet74
+# botCallAction maybeAmount call0
+# rand check act table.min_bet 20
+# botCheckAction maybeAmount bet95
+# HERE
+# player1
+# 270
+# 95
+# true cost 95
+# Exception in Tkinter callback
+# Traceback (most recent call last):
+#   File "/Users/crazyfox/anaconda3/lib/python3.6/tkinter/__init__.py", line 1699, in __call__
+#     return self.func(*args)
+#   File "gui.py", line 107, in <lambda>
+#     self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
+#   File "gui.py", line 193, in Raise
+#     maybe_winner = room.table.apply_action(plyr, 'raise', amount)
+#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 269, in apply_action
+#     self._raise(plyr, amount)
+#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 207, in _raise
+#     assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
 
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
 # or circle or maybe rectangle
