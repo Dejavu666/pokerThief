@@ -1,38 +1,14 @@
 # TO DO
 
+# One player remains, end screen/new table
+
+# ending hand and knocking out one player, duplicate of winner is put into gui possibly table,
+# the gui element just sits on the screen is not involved in hands
+# check seat_order, in_hand, gui.create playr img?
+
 # don't allow fold when all-in for bots 'auto-check when all-in'
 
-# spec DEBUG player1445
-# spec DEBUG player3110
-# botCallAction maybeAmount all_in0
-# botCallAction maybeAmount all_in0
-# botCallAction maybeAmount all_in0
-# DEBUG player1 wins 30
-# spec DEBUG player4226
-# spec DEBUG player1455
-# spec DEBUG player3110
-# spec DEBUG player29
-# botCallAction maybeAmount fold0
-# botCallAction maybeAmount call0
-# rand check act table.min_bet 20
-# botCheckAction maybeAmount bet74
-# botCallAction maybeAmount call0
-# rand check act table.min_bet 20
-# botCheckAction maybeAmount bet95
-# HERE
-# player1
-# 270
-# 95
-# true cost 95
-# Exception in Tkinter callback
-#   File "gui.py", line 107, in <lambda>
-#     self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
-#   File "gui.py", line 193, in Raise
-#     maybe_winner = room.table.apply_action(plyr, 'raise', amount)
-# table.py", line 269, in apply_action
-#     self._raise(plyr, amount)
-#table.py", line 207, in _raise
-#     assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
+# update readme
 
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
 # or circle or maybe rectangle
@@ -41,15 +17,9 @@
 
 # move dealer button instead of reseating players
 
-# graphical glitch between label configure in playerwindow after display_winners before next_hand player info
-# something else is changed, label briefly displays some info
-# prob caused by reseating players
-
 # auto-check / skip all-in, currently gives 'check only option'
 
 # post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
-
-# One player remains, end screen/new table
 
 # next_hand() create prompt instead of moving directly into hand
 # Tell hand type, highlight community cards used in hand
@@ -258,13 +228,15 @@ class Player_window(tk.Frame):
             if room.table.plyr_dict[plyr].stack == 0:
                 room.imageList[plyr].destroy()
         room.table.next_hand()
-        room.table_window.create_player_images(room.table.seat_order)
+        room.table_window.rotate_dealer_button()
+#        room.table_window.create_player_images(room.table.seat_order)
         room.table_window.create_chip_and_card_images()
         for plyr in room.table.seat_order:
             room.imageList[plyr].c1.configure(image=room.card_back)
             room.imageList[plyr].c2.configure(image=room.card_back)
         self.get_actions()
         
+    
     def destroy_buttons(self):
         try:
             self.b1.destroy()
@@ -353,6 +325,13 @@ class Table_window(tk.Frame):
             self.deal_turn()
         elif room.table.round == 4:
             self.deal_river()
+        
+    def rotate_dealer_button(self):
+        for i,p in enumerate(room.table.seat_order):
+            if i == 0:
+                room.imageList[p].dealerButton.configure(text = 'dealer')
+            else:
+                room.imageList[p].dealerButton.configure(text = '')
         
     # Get and reveal gui images of dealt cards
     def deal_flop(self):

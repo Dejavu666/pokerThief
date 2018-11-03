@@ -46,7 +46,6 @@ class Table():
         self.in_hand = self.seat_order[:]
         for p in self.in_hand:
             self.plyr_dict[p].begin_hand_chips = self.plyr_dict[p].stack
-            print('spec DEBUG ' + p + str(self.plyr_dict[p].begin_hand_chips))
         if len(self.seat_order) == 2:
             # helper function, blind order is different for 2players
             self.post_blinds_2player()
@@ -119,17 +118,13 @@ class Table():
         all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
             return [(self.pot, self.in_hand[:])]
-        print('DEBUG all-in ', all_in)
-        # working here, BUG , bug
         small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
-        print('DEBUG small_stacks ', small_stacks)
         sscpy = small_stacks[:]
         if len(small_stacks) > 1:
             i = 1
             for stk in small_stacks[1:]:
                 small_stacks[i] -= small_stacks[i-1]
                 i += 1
-        print('small_stacks ', small_stacks)
         pots_plyrs = []
         all_plyrs = self.seat_order[:]
         ih_plyrs = ih[:]
@@ -195,15 +190,8 @@ class Table():
         self.left_to_act.remove(plyr)
 
     def _raise(self, plyr, raise_amount):
-        print('HERE')
-        # this is happening when more chips than true cost but not enough for legal raise
-        # working here, BUG, bug
-        print(plyr)
-        print(raise_amount)
-        print(self.min_bet)
         assert(raise_amount >= min(self.plyr_dict[plyr].stack, self.min_bet))
         true_cost = self.cost_to_play-self.plyr_dict[plyr].chips_this_round
-        print('true cost ' + str(true_cost))
         assert(raise_amount + true_cost <= self.plyr_dict[plyr].stack)
         self.pot += raise_amount+true_cost
         self.plyr_dict[plyr].contribute_chips(raise_amount+true_cost)
@@ -307,15 +295,11 @@ class Table():
         for plyr in self.seat_order[1:] + [self.seat_order[0]]:
             if self.plyr_dict[plyr].stack > 0:
                 new_seats.append(plyr)
-            else: # working here, this should 
+            else:
                 self.plyr_dict.pop(plyr)
         self.seat_order = new_seats[:]
         
     # called by showdown(), break ties among same hand_rank
-    # working here BUG bug
-    # dict_copy with mutable attr messing stuff up, dict_copy.tie_break...
-    # fix by passing in plyr.tie_break lists instead of modifying copies
-    
     # input = [(player2,[14,12,11,9,3]),...]
     # output = ['player2',...]
     def break_ties(self, plyr_tb_tups):
@@ -324,14 +308,8 @@ class Table():
         while(True):
             if tbs[0] == []: # no more elements to tiebreak
                 return plyrs
-        # getting random first value for max, need to get actual highest tb val among plyrs
-            mx = max([tbs[n][0] for n in range(len(tbs))]) # bug here, working here, BUG
+            mx = max([tbs[n][0] for n in range(len(tbs))])
             for i,p in enumerate(plyrs[:]):
-                print('player ', p)
-                print('hand ', self.plyr_dict[p].hand)
-                print('com_cards ', self.com_cards)
-                print('tie_break value ', mx)
-                print('handrank value ', self.plyr_dict[p].hand_rank)
                 if tbs[i][0] < mx:
                     if p in plyrs:
                         plyrs.remove(p)

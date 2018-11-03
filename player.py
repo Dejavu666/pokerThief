@@ -66,7 +66,6 @@ class Player():
     
     def get_random_call_action(self,p,table):
         true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
-        # working here, bug BUG
         choice = randrange(0,3)
         if choice == 0:
             return ("fold",0)
