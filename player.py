@@ -55,6 +55,15 @@ class Player():
             elif randval == 2:
                 return ('fold',0)
 #********* BOT STUFF ******************************************************************************
+
+    def get_random_bot_action(self, p, table):
+        if table.plyr_dict[p].stack == 0:
+            return ('check',0)
+        elif table.cost_to_play == table.plyr_dict[p].chips_this_round:
+            return self.get_random_check_action(p, table)
+        else:
+            return self.get_random_call_action(p, table)
+
     def get_random_check_action(self,p,table):
         print('rand check act table.min_bet ' + str(table.min_bet))
         if table.min_bet >= table.plyr_dict[p].stack:

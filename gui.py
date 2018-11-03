@@ -122,26 +122,10 @@ class Player_window(tk.Frame):
     def populate(self, plyr, options):
         # FOR BOTS FROM THE FUTURE
         if room.table.plyr_dict[plyr].human == 0:
-            self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
             self.createBotPlayerImage(plyr)
-            # If pot is open
-            if room.table.plyr_dict[plyr].chips_this_round == room.table.cost_to_play:
-                botAction, maybeAmount = room.table.plyr_dict[plyr].get_random_check_action(plyr,room.table)
-                print('botCheckAction maybeAmount ' + botAction + str(maybeAmount))
-                if botAction == 'check':
-                    self.check(plyr)
-                else:
-                    self.bet(plyr,maybeAmount)
-            # pot is not open
-            else:
-                botAction, maybeAmount = room.table.plyr_dict[plyr].get_random_call_action(plyr,room.table)
-                print('botCallAction maybeAmount ' + botAction + str(maybeAmount))
-                if botAction == 'call':
-                    self.call(plyr)
-                elif botAction == 'raise':
-                    self.Raise(plyr,maybeAmount)
-                else:
-                    self.fold(plyr)
+            # working here bug BUG not really bug add bot action print and delay
+            bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
+            room.after(2000, self.apply_bot_action, plyr, bot_action, maybe_amount)
         else:# PUNY HUMANS
             self.create_current_plyr_image(plyr)
             if options[0] == 'all-in':
@@ -155,6 +139,20 @@ class Player_window(tk.Frame):
             elif options[0] == 'call_all_in_options':
                 self.create_call_all_in_buttons(plyr)
             room.table_window.update_table_window_cards_and_chips()
+        
+    def apply_bot_action(self, p, act, amt=0):
+        if act == 'fold':
+            self.fold(p)
+        elif act == 'check':
+            self.check(p)
+        elif act == 'raise':
+            self.Raise(p, amt)
+        elif act == 'all_in':
+            self.all_in(p)
+        elif act == 'bet':
+            self.bet(p, amt)
+        elif act == 'call':
+            self.call(p)
         
     def all_in(self, plyr,amount=0):
         amount = room.table.plyr_dict[plyr].stack
