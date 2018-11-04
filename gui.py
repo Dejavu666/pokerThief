@@ -1,5 +1,13 @@
 # TO DO
 
+# create_pots problem, too much subtracted from pot rewarded to winner
+
+#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 329, in reward
+#     remainder = pot % len(plyrs)
+# ZeroDivisionError: integer division or modulo by zero
+
+# bb option? not deleting fold button from gui
+
 # extra chips are added to pot (created) when multi all-ins, pot splits
 
 # One player remains, end screen/new table
@@ -229,7 +237,6 @@ class Player_window(tk.Frame):
                 room.imageList[plyr].destroy()
         room.table.next_hand()
         room.table_window.rotate_dealer_button()
-#        room.table_window.create_player_images(room.table.seat_order)
         room.table_window.create_chip_and_card_images()
         for plyr in room.table.seat_order:
             room.imageList[plyr].c1.configure(image=room.card_back)
@@ -239,6 +246,9 @@ class Player_window(tk.Frame):
     
     def destroy_buttons(self):
         try:
+            self.b1.destroy()
+            self.b2.destroy()
+            self.b3.destroy()
             self.b1.destroy()
             self.b2.destroy()
             self.b3.destroy()

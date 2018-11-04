@@ -99,6 +99,10 @@ class Table():
         
     # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
+    
+    # bug BUG working here
+    # when player is eliminated in first resolved pot, but the only eligible player for later pots,
+    # an empty list is passed to reward, resulting in len() of zero, modulo by zero error
     def create_pots(self):
         pd = deepcopy(self.plyr_dict)
         ih = self.in_hand[:]
@@ -311,7 +315,7 @@ class Table():
         plyrs = [x[0] for x in plyr_tb_tups]
         tbs = [x[1] for x in plyr_tb_tups]
         while(True):
-            if tbs == []: # no more elements to tiebreak
+            if tbs[0] == []: # no more elements to tiebreak
                 return plyrs
             mx = max([tbs[n][0] for n in range(len(tbs))])
             for i,p in enumerate(plyrs[:]):
@@ -343,14 +347,16 @@ class Table():
     # Ends the hand, rewards players
     # Should prompt for next_hand with this
     def showdown(self, pots_plyrs_tup):
-        print('pots_plyrs_tup ', pots_plyrs_tup)
+        print('pots_plyrs_tup inside showdown ', pots_plyrs_tup)
         main_dict = {}
         for p in self.in_hand:
             self.assign_hand_rank(p)
         for pot_plyr in pots_plyrs_tup:
+            print('pot_plyr in pots_plyrs_tup showdown loop ' + str(pot_plyr))
             high = max([self.plyr_dict[p].hand_rank for p in self.in_hand])
             pot = pot_plyr[0]
             highplyrs = [p for p in pot_plyr[1] if self.plyr_dict[p].hand_rank == high]
+            print('pot and plyrs with highest hand rank from tuple ' + str(pot) + ' ' + str(highplyrs))
             tbs = [self.plyr_dict[p].tie_break[:] for p in highplyrs]
             plyrs_tbs_tups = [(highplyrs[i], tbs[i]) for i in range(len(highplyrs))]
             dict = self.reward(pot, self.break_ties(plyrs_tbs_tups))
@@ -359,6 +365,7 @@ class Table():
                     main_dict[k] = dict[k]
                 else:
                     main_dict[k] += dict[k]
+        print('showdown main_dict returned ' + str(main_dict))
         return main_dict
         
     # Assigns hand_rank and tie_break values to the Player object
