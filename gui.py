@@ -162,8 +162,8 @@ class Player_window(tk.Frame):
     def all_in(self, plyr):
         amount = room.table.plyr_dict[plyr].stack
         room.table_window.update_table_window_cards_and_chips()
-        self.destroy_buttons()
         maybe_winner = room.table.apply_action(plyr, 'all_in', amount)
+        self.destroy_buttons()
         if maybe_winner:
             self.display_winners(maybe_winner[1])
         else:

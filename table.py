@@ -114,6 +114,7 @@ class Table():
                 self.pot -= amount
                 self.plyr_dict[plyr].stack += amount
                 self.plyr_dict[plyr].chips_in_pot -= amount
+                self.plyr_dict[plyr].chips_this_round -= amount
 
         all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
@@ -183,7 +184,8 @@ class Table():
         self.left_to_act.remove(plyr)
         # if amount is less than legal raise, do not reopen betting except to call !!
         # working here bug here
-        #if amount < self.min_bet
+        if amount > self.min_bet:
+            self.min_bet = amount
         self.repop_left_to_act(plyr)
     
     def call(self, plyr, amount):
@@ -309,7 +311,7 @@ class Table():
         plyrs = [x[0] for x in plyr_tb_tups]
         tbs = [x[1] for x in plyr_tb_tups]
         while(True):
-            if tbs[0] == []: # no more elements to tiebreak
+            if tbs == []: # no more elements to tiebreak
                 return plyrs
             mx = max([tbs[n][0] for n in range(len(tbs))])
             for i,p in enumerate(plyrs[:]):

@@ -59,6 +59,29 @@ class Player():
     def get_random_bot_action(self, p, table):
         if table.plyr_dict[p].stack == 0:
             return ('check',0)
+        # bot big blind special option actions
+        elif len(table.seat_order) == 2 and table.round == 1 and p == table.seat_order[1] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
+            # 2 plyr bb options, check, bet
+            choice = randrange(0,2)
+            if choice:
+                return ('check',0)
+            else:
+                # if not enough for legal raise
+                if table.min_bet >= table.plyr_dict[p].stack:
+                    return ('all_in', 0)
+                else: # enough for legal raise
+                    return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
+        elif len(table.seat_order) > 2 and table.round == 1 and p == table.seat_order[2] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
+            # more than 2 plyr bb options, check, bet
+            choice = randrange(0,2)
+            if choice:
+                return ('check',0)
+            else:
+                # if not enough for legal raise
+                if table.min_bet >= table.plyr_dict[p].stack:
+                    return ('all_in', 0)
+                else: # enough for legal raise
+                    return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
         elif table.cost_to_play == table.plyr_dict[p].chips_this_round:
             return self.get_random_check_action(p, table)
         else:
@@ -71,7 +94,6 @@ class Player():
         else:
             amount = randrange(table.min_bet, table.plyr_dict[p].stack)
         return ("check",0) if randrange(0,2) else ("bet",amount)
-    # fold, call, or raise
     
     def get_random_call_action(self,p,table):
         true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
