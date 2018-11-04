@@ -1,10 +1,8 @@
 # TO DO
 
-# One player remains, end screen/new table
+# extra chips are added to pot (created) when multi all-ins, pot splits
 
-# ending hand and knocking out one player, duplicate of winner is put into gui possibly table,
-# the gui element just sits on the screen is not involved in hands
-# check seat_order, in_hand, gui.create playr img?
+# One player remains, end screen/new table
 
 # don't allow fold when all-in for bots 'auto-check when all-in'
 
@@ -15,7 +13,6 @@
 # ideally the distance from each plyr to the next is the same no matter the number of plyrs
 # ie, 2 plyrs are seated opposite the oval, 3 plyrs would divide the oval into thirds, ...
 
-# move dealer button instead of reseating players
 
 # auto-check / skip all-in, currently gives 'check only option'
 
