@@ -112,20 +112,24 @@ class Player_window(tk.Frame):
         self.card2.configure(image=self.cardimg2)
         
     # working here, bots after refactor
-    def createBotPlayerImage(self,plyr):
+    def create_bot_plyr_img(self,plyr):
         self.plyrMsg.configure(text='Robot '+plyr+' is thinking...')
         # WORKING HERE
         self.card1.configure(image=room.card_back)
         self.card2.configure(image=room.card_back)
+    
+    def show_bot_action(self, p, act, amt=0):
+        self.plyrMsg.configure(text='Robot ' + p + act + ' ' + str(amt))
 
     # Called by get_actions(), figures out what buttons/images in player_window
     def populate(self, plyr, options):
         # FOR BOTS FROM THE FUTURE
         if room.table.plyr_dict[plyr].human == 0:
-            self.createBotPlayerImage(plyr)
+            self.create_bot_plyr_img(plyr)
             # working here bug BUG not really bug add bot action print and delay
             bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
-            room.after(2000, self.apply_bot_action, plyr, bot_action, maybe_amount)
+            room.after(1000, self.show_bot_action, plyr, bot_action, maybe_amount)
+            room.after(3000, self.apply_bot_action, plyr, bot_action, maybe_amount)
         else:# PUNY HUMANS
             self.create_current_plyr_image(plyr)
             if options[0] == 'all-in':
@@ -141,6 +145,7 @@ class Player_window(tk.Frame):
             room.table_window.update_table_window_cards_and_chips()
         
     def apply_bot_action(self, p, act, amt=0):
+        print('apply bot action ' + p + ' ' + act + ' ' + str(amt))
         if act == 'fold':
             self.fold(p)
         elif act == 'check':
@@ -154,7 +159,7 @@ class Player_window(tk.Frame):
         elif act == 'call':
             self.call(p)
         
-    def all_in(self, plyr,amount=0):
+    def all_in(self, plyr):
         amount = room.table.plyr_dict[plyr].stack
         room.table_window.update_table_window_cards_and_chips()
         self.destroy_buttons()

@@ -179,7 +179,11 @@ class Table():
         assert(self.plyr_dict[plyr].stack == amount)
         self.pot += amount
         self.plyr_dict[plyr].contribute_chips(amount)
+        self.cost_to_play += amount
         self.left_to_act.remove(plyr)
+        # if amount is less than legal raise, do not reopen betting except to call !!
+        # working here bug here
+        #if amount < self.min_bet
         self.repop_left_to_act(plyr)
     
     def call(self, plyr, amount):
