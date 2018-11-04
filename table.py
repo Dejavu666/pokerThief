@@ -181,7 +181,6 @@ class Table():
         self.plyr_dict[plyr].contribute_chips(amount)
         self.left_to_act.remove(plyr)
         self.repop_left_to_act(plyr)
-
     
     def call(self, plyr, amount):
         assert(amount <= self.plyr_dict[plyr].stack)
@@ -284,7 +283,7 @@ class Table():
         self.cost_to_play = 0
         self.min_bet = self.big_blind
         # reset players chips_this_round, BUT NOT chips_in_pot
-        for plyr in self.seat_order:
+        for plyr in self.seat_order[1:] + [self.seat_order[0]]:
             self.plyr_dict[plyr].chips_this_round = 0
             # Reset left_to_act
             if plyr in self.in_hand:
