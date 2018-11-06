@@ -1,3 +1,4 @@
+import pdb
 import player, deck, hands
 from random import shuffle
 from copy import deepcopy
@@ -43,6 +44,7 @@ class Table():
     
     # ?maybe account for division of odd numbers / split chips?
     def post_blinds(self):
+        
         self.in_hand = self.seat_order[:]
         for p in self.in_hand:
             self.plyr_dict[p].begin_hand_chips = self.plyr_dict[p].stack
@@ -76,6 +78,7 @@ class Table():
         
     # post_blinds for only 2 players, helper func called by post_blinds()
     def post_blinds_2player(self):
+        
         self.in_hand = self.seat_order[:]
         # dealer enough for SB
         if self.plyr_dict[self.seat_order[0]].stack >= self.big_blind//2:
@@ -97,13 +100,17 @@ class Table():
         self.left_to_act = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
+        
     # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
+    
+    # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot
     
     # bug BUG working here
     # when player is eliminated in first resolved pot, but the only eligible player for later pots,
     # an empty list is passed to reward, resulting in len() of zero, modulo by zero error
     def create_pots(self):
+        pdb.set_trace()
         pd = deepcopy(self.plyr_dict)
         ih = self.in_hand[:]
         # first return excess chips to chip leader, if ncsry
@@ -119,7 +126,7 @@ class Table():
                 self.plyr_dict[plyr].stack += amount
                 self.plyr_dict[plyr].chips_in_pot -= amount
                 self.plyr_dict[plyr].chips_this_round -= amount
-
+        
         all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
             return [(self.pot, self.in_hand[:])]
@@ -130,6 +137,7 @@ class Table():
             for stk in small_stacks[1:]:
                 small_stacks[i] -= small_stacks[i-1]
                 i += 1
+        
         pots_plyrs = []
         all_plyrs = self.seat_order[:]
         ih_plyrs = ih[:]
@@ -137,6 +145,7 @@ class Table():
             pot = 0
             plyrs = ih_plyrs[:]
             for p in all_plyrs:
+                pdb.set_trace()
                 amount = min(n, pd[p].chips_in_pot)
                 pot += amount
                 self.pot -= amount
@@ -146,6 +155,7 @@ class Table():
                 if pd[p].begin_hand_chips == sscpy[i]:
                     ih_plyrs.remove(p)
         print('return pots_plyrs ', pots_plyrs)
+        pdb.set_trace()
         return pots_plyrs
 
     def clean_table_after_hand(self):
@@ -460,3 +470,7 @@ if __name__ == "__main__":
     newTable = Table(9,200,20)
     assert(newTable.break_ties([('player9',[10]), ('player3',[11]), ('player4',[10]), ('player1',[9]), ('player2',[10])]) \
     == ['player3'])
+    
+##############################################
+# TEST SUITE for create_pots()
+#     # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot

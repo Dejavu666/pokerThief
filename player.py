@@ -32,28 +32,6 @@ class Player():
         self.chips_in_pot = 0
         self.begin_hand_chips = self.stack
     
-    # bot needs all irreducible info, but start with:
-    # stacksize, cost2play, com_cards,
-    def bot_action(self, cost2play, bb, minbet):
-        if self.chips_this_round == cost2play:# table is open
-            # placeholder for testing
-            # gets random bot action between possible actions
-            randval = randrange(0,1)
-            if randval == 0:
-                amount = randrange(bb,self.stack)
-                return ('bet',amount)
-            elif randval == 1:
-                return ('check',0)
-        else:#table is bet
-            assert(cost2play > self.chips_this_round)
-            randval = randrange(0,2)
-            if randval == 0:
-                return ('call',min(self.stack, cost2play-self.chips_this_round))
-            elif randval == 1:
-                amount = randrange(min(minbet,self.stack), self.stack)
-                return ('raise', amount)
-            elif randval == 2:
-                return ('fold',0)
 #********* BOT STUFF ******************************************************************************
 
     def get_random_bot_action(self, p, table):
@@ -71,18 +49,20 @@ class Player():
                     return ('all_in', 0)
                 else: # enough for legal raise
                     return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
-        elif len(table.seat_order) > 2 and table.round == 1 and p == table.seat_order[2] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
-            # more than 2 plyr bb options, check, bet
-            choice = randrange(0,2)
-            if choice:
-                return ('check',0)
-            else:
-                # if not enough for legal raise
-                if table.min_bet >= table.plyr_dict[p].stack:
-                    return ('all_in', 0)
-                else: # enough for legal raise
-                    return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
-        elif table.cost_to_play == table.plyr_dict[p].chips_this_round:
+        # bug here, can't reference seat_order[2] unless it exists
+        if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.plyr_dict[p].chips_this_round:
+            if table.seat_order[2] == p:
+                # more than 2 plyr bb options, check, bet
+                choice = randrange(0,2)
+                if choice:
+                    return ('check',0)
+                else:
+                    # if not enough for legal raise
+                    if table.min_bet >= table.plyr_dict[p].stack:
+                        return ('all_in', 0)
+                    else: # enough for legal raise
+                        return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
+        if table.cost_to_play == table.plyr_dict[p].chips_this_round:
             return self.get_random_check_action(p, table)
         else:
             return self.get_random_call_action(p, table)
@@ -104,10 +84,10 @@ class Player():
             return ("call", 0)
         else:
             # if not enough for legal raise
-            if table.plyr_dict[p].stack-true_cost <= table.plyr_dict[p].stack:
+            if table.plyr_dict[p].stack <= (2 * true_cost):
                 return ('all_in',0)
             else:
-                amount = randrange(true_cost, table.plyr_dict[p].stack-true_cost)
+                amount = randrange(table.min_bet, table.plyr_dict[p].stack-true_cost+1)
             return ("raise", amount)
 # 
 #     

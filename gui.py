@@ -1,5 +1,24 @@
 # TO DO
 
+# err in an enumerate() somewhere, I started the index count at 1 instead of zero
+
+# phantom fold button
+
+# make test suite for create_pots in table.py, run with table. use pdb for gui
+
+# breakpoint() works with 3.7 and only on toplevel file being run
+
+# break_ties error, if tbs[0] == []: # no more elements to tiebreak, 2 pairs prob
+
+# wager entry slider rounds to nearest 10, bots bet in increments of 1, could fix and avoid rounding errors, odd chips
+# with incrementing bets to 10's
+
+# first to act after flop, action is seen before flop cards
+
+# too many all-in's from bots, check bounds
+
+# all_in's are making pot too big
+
 # create_pots problem, too much subtracted from pot rewarded to winner
 
 #   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 329, in reward
@@ -34,19 +53,18 @@
 # change on init to create one human, N bots
 # change start game popup to "choose num opponents"
 
-
+import pdb
 import table
 import tkinter as tk
 from PIL import Image, ImageTk
 import sys
-
 
 class Player_window(tk.Frame):
     def __init__(self,parent):
         tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
         tmpImage = Image.open('res/placeholder.gif').resize((130,130))
         self.playerImage = ImageTk.PhotoImage(tmpImage)
-        self.playerImg = tk.Label(self,image=self.playerImage,bg='black')
+        self.playerImg = tk.Label(self, image=self.playerImage, bg='black')
         self.playerImg.pack(side='left')
         self.plyrMsg = tk.Label(self,text='Welcome to Poker',bg='black',fg='maroon')
         self.plyrMsg.pack()
@@ -130,6 +148,7 @@ class Player_window(tk.Frame):
     def populate(self, plyr, options):
         # FOR BOTS FROM THE FUTURE
         if room.table.plyr_dict[plyr].human == 0:
+            room.player_window.destroy_buttons()
             self.create_bot_plyr_img(plyr)
             # working here bug BUG not really bug add bot action print and delay
             bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
@@ -137,6 +156,7 @@ class Player_window(tk.Frame):
             room.after(3000, self.apply_bot_action, plyr, bot_action, maybe_amount)
         else:# PUNY HUMANS
             self.create_current_plyr_image(plyr)
+            print('options in populate ' + options[0])
             if options[0] == 'all-in':
                 self.create_all_in_buttons(plyr)
             elif options[0] == 'bb_options':
@@ -199,6 +219,7 @@ class Player_window(tk.Frame):
             room.player_window.get_actions()
         
     def fold(self,plyr):
+        pdb.set_trace()
         maybe_winner = room.table.apply_action(plyr, 'fold')
         room.table_window.update_table_window_cards_and_chips()
         room.imageList[plyr].c1.configure(image=room.no_card)
@@ -247,12 +268,21 @@ class Player_window(tk.Frame):
     def destroy_buttons(self):
         try:
             self.b1.destroy()
+        except:
+            pass
+        try:
             self.b2.destroy()
+        except:
+            pass
+        try:
             self.b3.destroy()
-            self.b1.destroy()
-            self.b2.destroy()
-            self.b3.destroy()
+        except:
+            pass
+        try:
             self.wagerEntry.destroy()
+        except:
+            pass
+        try:
             self.card1.configure(image=None)
             self.card2.configure(image=None)
         except:
@@ -483,7 +513,7 @@ class StartGamePopup(object):
         room.stack_size = self.stack_sizeEntry.get()
         room.bb_size = self.bigBlindEntry.get()
         room.table = table.Table(big_blind=room.bb_size,num_players=room.num_plyrs,num_chips=room.stack_size)
-        plyrList = ['player'+str(x+1) for x in range(room.num_plyrs)]
+        #plyrList = ['player'+str(x+1) for x in range(room.num_plyrs)]
         self.top.destroy()
         room.table_window.create_player_images(room.table.seat_order)
         room.table_window.create_chip_and_card_images()
@@ -517,4 +547,5 @@ root.geometry('1000x700')
 room = Main_application(root)
 room.pack(fill=tk.BOTH, expand=tk.YES)
 
-root.mainloop()
+pdb.run(root.mainloop())
+
