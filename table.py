@@ -498,6 +498,7 @@ if __name__ == "__main__":
     before_return = t.pot
     t.return_excess_chips()
     print('returned this many chips ' + str(before_return - t.pot))
+    created_chips_total -= (before_return - t.pot)
     pot_plyrs_tups = t.create_pots()
     sum_pots = sum([x[0] for x in pot_plyrs_tups])
     print('sum_pots ' + str(sum_pots) + ' ' + 'created_chips_total ' + str(created_chips_total))
