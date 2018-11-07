@@ -1,6 +1,6 @@
 import pdb
 import player, deck, hands
-from random import shuffle
+from random import shuffle, randrange
 from copy import deepcopy
 
 
@@ -100,21 +100,13 @@ class Table():
         self.left_to_act = self.seat_order[:]
         self.cost_to_play = self.big_blind
         
-        
-    # Creates input for showdown() from table state at end of hand
-    # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
-    
-    # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot
-    
-    # bug BUG working here
-    # when player is eliminated in first resolved pot, but the only eligible player for later pots,
-    # an empty list is passed to reward, resulting in len() of zero, modulo by zero error
-    def create_pots(self):
-        pdb.set_trace()
+    # if one player has contributed more chips than all the rest, return those chips
+    # modify stack and plyr_dict
+    def return_excess_chips(self):
         pd = deepcopy(self.plyr_dict)
         ih = self.in_hand[:]
-        # first return excess chips to chip leader, if ncsry
         bs = [p for p in ih if pd[p].chips_in_pot == max([pd[k].chips_in_pot for k in ih])]
+        print(bs)
         if len(bs) == 1:
             ihcpy = ih[:]
             plyr = bs[0]
@@ -125,7 +117,22 @@ class Table():
                 self.pot -= amount
                 self.plyr_dict[plyr].stack += amount
                 self.plyr_dict[plyr].chips_in_pot -= amount
-                self.plyr_dict[plyr].chips_this_round -= amount
+        
+    # Creates input for showdown() from table state at end of hand
+    # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
+    
+    # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot
+    
+    # bug BUG working here
+    # when player is eliminated in first resolved pot, but the only eligible player for later pots,
+    # an empty list is passed to reward, resulting in len() of zero, modulo by zero error
+    def create_pots(self):
+#        pdb.set_trace()
+        pd = deepcopy(self.plyr_dict)
+        ih = self.in_hand[:]
+        # first return excess chips to chip leader, if ncsry
+
+                #self.plyr_dict[plyr].chips_this_round -= amount
         
         all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
@@ -144,8 +151,8 @@ class Table():
         for i, n in enumerate(small_stacks):
             pot = 0
             plyrs = ih_plyrs[:]
-            for p in all_plyrs:
-                pdb.set_trace()
+            for p in all_plyrs: # bug is here, all_plyrs builds pots with small_stack players 
+#                pdb.set_trace()
                 amount = min(n, pd[p].chips_in_pot)
                 pot += amount
                 self.pot -= amount
@@ -154,8 +161,9 @@ class Table():
             for p in ih_plyrs[:]:
                 if pd[p].begin_hand_chips == sscpy[i]:
                     ih_plyrs.remove(p)
+                    all_plyrs.remove(p)
         print('return pots_plyrs ', pots_plyrs)
-        pdb.set_trace()
+#        pdb.set_trace()
         return pots_plyrs
 
     def clean_table_after_hand(self):
@@ -454,23 +462,44 @@ if __name__ == "__main__":
     t.plyr_dict[t.seat_order[8]].hand = [(4,'D'), (9,'D')] # 1pair with lower tiebreak
     for i,p in enumerate(t.seat_order):
         t.assign_hand_rank(p)
-        print('seat order ', i)
-        print(t.plyr_dict[p].hand_rank)
-        print(t.plyr_dict[p].tie_break)
-    print(t.showdown(t.create_pots()))
-
-##############################################
-# TEST SUITE break_ties()
-    # input = [(player2,[14,12,11,9,3]),...]
-    # output = ['player2',...]
-    # need to confirm not getting random tie_break val for first max, get actual max
-    
-    # for straights
-    # make this input: [('player9',[10]), ('player3',[11]), ('player4',[10]), ('player1',[9]), ('player2',[10])]
-    newTable = Table(9,200,20)
-    assert(newTable.break_ties([('player9',[10]), ('player3',[11]), ('player4',[10]), ('player1',[9]), ('player2',[10])]) \
-    == ['player3'])
-    
 ##############################################
 # TEST SUITE for create_pots()
-#     # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot
+# need to assert that amounts after showdown() with create_pots() are the same amounts of chips
+# add up all player's stacks before showdowns() and break_ties(), compare to amounts given to players with reward()
+    # need to make series of plyrs with about half being all-in, 
+    t.in_hand = t.seat_order[:]
+    created_chips_total = 0
+    for p in t.seat_order:
+        val = randrange(1, 1001)
+        t.plyr_dict[p].stack = val
+        t.plyr_dict[p].begin_hand_chips = val
+    for p in t.seat_order:
+        choice = randrange(0,2)
+        if choice:
+            # player has gone all-in
+            amt = t.plyr_dict[p].stack
+            t.pot += amt
+            t.plyr_dict[p].stack -= amt
+            t.plyr_dict[p].chips_in_pot = amt
+            created_chips_total += amt
+        else:
+            # player has contr some and folded
+            val = randrange(1, t.plyr_dict[p].stack)
+            t.pot += val
+            t.plyr_dict[p].stack -= val
+            t.plyr_dict[p].chips_in_pot = val
+            t.in_hand.remove(p)
+            created_chips_total += val
+    for p in t.seat_order:
+        print(p)
+        print('begin hand chips ' + str(t.plyr_dict[p].begin_hand_chips))
+        print('chips in pot ' + str(t.plyr_dict[p].chips_in_pot))
+        print('stack ' + str(t.plyr_dict[p].stack))
+    before_return = t.pot
+    t.return_excess_chips()
+    print('returned this many chips ' + str(before_return - t.pot))
+    pot_plyrs_tups = t.create_pots()
+    sum_pots = sum([x[0] for x in pot_plyrs_tups])
+    print('sum_pots ' + str(sum_pots) + ' ' + 'created_chips_total ' + str(created_chips_total))
+    assert(created_chips_total == sum_pots)
+    print('sum_pots ' + str(sum_pots) + ' ' + 'created_chips_total ' + str(created_chips_total))

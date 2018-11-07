@@ -1,31 +1,11 @@
 # TO DO
 
-# err in an enumerate() somewhere, I started the index count at 1 instead of zero
-
-# phantom fold button
-
-# make test suite for create_pots in table.py, run with table. use pdb for gui
-
-# breakpoint() works with 3.7 and only on toplevel file being run
+# t.create_pots - 
 
 # break_ties error, if tbs[0] == []: # no more elements to tiebreak, 2 pairs prob
 
 # wager entry slider rounds to nearest 10, bots bet in increments of 1, could fix and avoid rounding errors, odd chips
 # with incrementing bets to 10's
-
-# first to act after flop, action is seen before flop cards
-
-# too many all-in's from bots, check bounds
-
-# all_in's are making pot too big
-
-# create_pots problem, too much subtracted from pot rewarded to winner
-
-#   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 329, in reward
-#     remainder = pot % len(plyrs)
-# ZeroDivisionError: integer division or modulo by zero
-
-# bb option? not deleting fold button from gui
 
 # extra chips are added to pot (created) when multi all-ins, pot splits
 
@@ -33,25 +13,19 @@
 
 # don't allow fold when all-in for bots 'auto-check when all-in'
 
-# update readme
-
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
-# or circle or maybe rectangle
-# ideally the distance from each plyr to the next is the same no matter the number of plyrs
-# ie, 2 plyrs are seated opposite the oval, 3 plyrs would divide the oval into thirds, ...
-
 
 # auto-check / skip all-in, currently gives 'check only option'
 
 # post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
 
 # next_hand() create prompt instead of moving directly into hand
+
 # Tell hand type, highlight community cards used in hand
+
 # change player images
-# add single-player versus multiplayer bots
-# start bot shim with return random action for bot
+
 # change on init to create one human, N bots
-# change start game popup to "choose num opponents"
 
 import pdb
 import table
@@ -142,6 +116,7 @@ class Player_window(tk.Frame):
         self.card2.configure(image=room.card_back)
     
     def show_bot_action(self, p, act, amt=0):
+        room.table.update_table_window_cards_and_chips()
         self.plyrMsg.configure(text='Robot ' + p + act + ' ' + str(amt))
 
     # Called by get_actions(), figures out what buttons/images in player_window
