@@ -1,13 +1,18 @@
 # TO DO
 
-# t.create_pots - 
+# error 3 player, dealer has less than legal call (less than sb/bb), goes all-in stack say 4 with bb 20, next bot FOLDS
+# is fold expected? what to do about less than legal all-in/call/raise? if bb can fold but ss cannot win even the entire
+# bb, chips should be in main_pot for sb player non-ss non-bb, should be returned to remaining player in hand with ss
 
-# break_ties error, if tbs[0] == []: # no more elements to tiebreak, 2 pairs prob
+
+# gui wagerEntry slider rounds up or down to nearest ten, resulting in input of illegal amounts
+
+# gui show call / all-in amounts
+
+# unique player image faces
 
 # wager entry slider rounds to nearest 10, bots bet in increments of 1, could fix and avoid rounding errors, odd chips
 # with incrementing bets to 10's
-
-# extra chips are added to pot (created) when multi all-ins, pot splits
 
 # One player remains, end screen/new table
 
@@ -15,15 +20,11 @@
 
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
 
-# auto-check / skip all-in, currently gives 'check only option'
-
 # post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
 
 # next_hand() create prompt instead of moving directly into hand
 
 # Tell hand type, highlight community cards used in hand
-
-# change player images
 
 # change on init to create one human, N bots
 
@@ -116,7 +117,7 @@ class Player_window(tk.Frame):
         self.card2.configure(image=room.card_back)
     
     def show_bot_action(self, p, act, amt=0):
-        room.table.update_table_window_cards_and_chips()
+        room.table_window.update_table_window_cards_and_chips()
         self.plyrMsg.configure(text='Robot ' + p + act + ' ' + str(amt))
 
     # Called by get_actions(), figures out what buttons/images in player_window
@@ -194,7 +195,7 @@ class Player_window(tk.Frame):
             room.player_window.get_actions()
         
     def fold(self,plyr):
-        pdb.set_trace()
+#        pdb.set_trace()
         maybe_winner = room.table.apply_action(plyr, 'fold')
         room.table_window.update_table_window_cards_and_chips()
         room.imageList[plyr].c1.configure(image=room.no_card)

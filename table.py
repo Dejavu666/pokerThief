@@ -120,51 +120,40 @@ class Table():
         
     # Creates input for showdown() from table state at end of hand
     # RETURN VALUE --> [(1stsidepot,[listofplyrselig,...]),...(mainpot,[listofeligplyrs])]
-    
-    # depends on pd, p.chips_in_pot, in_hand, modifies chips_in_pot, pot, chips_this_round, p.pot
-    
-    # bug BUG working here
-    # when player is eliminated in first resolved pot, but the only eligible player for later pots,
-    # an empty list is passed to reward, resulting in len() of zero, modulo by zero error
     def create_pots(self):
-#        pdb.set_trace()
         pd = deepcopy(self.plyr_dict)
         ih = self.in_hand[:]
-        # first return excess chips to chip leader, if ncsry
-
-                #self.plyr_dict[plyr].chips_this_round -= amount
-        
         all_in = [p for p in ih if pd[p].stack == 0]
         if len(all_in) == 0:
             return [(self.pot, self.in_hand[:])]
         small_stacks = sorted(set([self.plyr_dict[p].begin_hand_chips for p in all_in]))
-        sscpy = small_stacks[:]
-        if len(small_stacks) > 1:
-            i = 1
-            for stk in small_stacks[1:]:
-                small_stacks[i] -= small_stacks[i-1]
-                i += 1
-        
+        print('pre-subtract small stacks ' + str(small_stacks))
+        print('post-subtract small stacks ' + str(small_stacks))
         pots_plyrs = []
         all_plyrs = self.seat_order[:]
         ih_plyrs = ih[:]
         for i, n in enumerate(small_stacks):
             pot = 0
             plyrs = ih_plyrs[:]
-            for p in all_plyrs: # bug is here, all_plyrs builds pots with small_stack players 
-#                pdb.set_trace()
+            for p in all_plyrs:
                 amount = min(n, pd[p].chips_in_pot)
                 pot += amount
                 self.pot -= amount
-                pd[p].chips_in_pot -= amount
             pots_plyrs.append((pot, plyrs))
             for p in ih_plyrs[:]:
-                if pd[p].begin_hand_chips == sscpy[i]:
+                if pd[p].begin_hand_chips == small_stacks[i] and pd[p].stack == 0:
                     ih_plyrs.remove(p)
-                    all_plyrs.remove(p)
-        print('return pots_plyrs ', pots_plyrs)
-#        pdb.set_trace()
-        return pots_plyrs
+        # subtract from each sidepot, the total of all previous sidepots
+        pots = [x[0] for x in pots_plyrs]
+        newpots = []
+        for i,pot in enumerate(pots):
+            newpots.append(pot - sum(newpots[:i]))
+        print('pots ' + str(pots))
+        newtups = []
+        for i,pot_plyr in enumerate(pots_plyrs):
+            newtups.append((newpots[i],pot_plyr[1]))
+        print('return pots_plyrs ', newtups)
+        return newtups
 
     def clean_table_after_hand(self):
         self.pot = 0
@@ -248,6 +237,7 @@ class Table():
             return ['hand over', winner_info_dict]
         elif self.left_to_act == []: # no players left to act
             if self.round == 4: # last round
+                self.return_excess_chips()
                 pots_plyrs_tup = self.create_pots()
                 winner_info_dict = self.showdown(pots_plyrs_tup)
                 return ['hand over', winner_info_dict]
