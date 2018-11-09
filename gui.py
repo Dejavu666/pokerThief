@@ -1,5 +1,37 @@
 # TO DO
 
+
+'''
+    if tbs[0] == []: # no more elements to tiebreak
+IndexError: list index out of range
+'''
+'''
+rand call act true_cost 40
+apply bot action player2 raise 153
+Raise gui error prob from bot which doesnt use wagerEntry
+options in populate call_options
+rand check act table.min_bet 20
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "/Users/crazyfox/anaconda3/lib/python3.7/tkinter/__init__.py", line 1702, in __call__
+    return self.func(*args)
+  File "gui.py", line 262, in <lambda>
+    self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
+  File "gui.py", line 349, in call
+    room.player_window.get_actions()
+  File "gui.py", line 223, in get_actions
+    room.player_window.populate(plyr, options)
+  File "gui.py", line 298, in populate
+    bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/bot_profiles.py", line 40, in get_random_bot_action
+    return self.get_random_check_action(p, table)
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/bot_profiles.py", line 49, in get_random_check_action
+    amount = randrange(max(table.pot//3,table.min_bet), min((2*table.pot),table.plyr_dict[p].stack)+1)
+  File "/Users/crazyfox/anaconda3/lib/python3.7/random.py", line 200, in randrange
+    raise ValueError("empty range for randrange() (%d,%d, %d)" % (istart, istop, width))
+ValueError: empty range for randrange() (145,128, -17)
+'''
+
 '''
 more than enough to call but not enough for legal raise, in get_random_call_action-->raise
  File "gui.py", line 131, in populate

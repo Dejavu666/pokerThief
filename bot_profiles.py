@@ -1,11 +1,13 @@
 import player
 from random import randrange
 # extend Player class, override basic action getters
-# currently all the same as 'random' bots
+# currently mostly the same as 'random' bots
 # just getting placeholder to adjust individual actions once instantiated correctly
 
-# Stop n Go, currently same as 'random'
-# change to 'if check action: bet wide range, if call action: call wide range'
+# for all bots... rank_sum increases action, made_pairs incr action, draws to pot odds, adjust bet sizes rel to pot
+
+# Stop n Go
+# working on...'if check action: bet wide range, if call action: call wide range'
 class Stop_n_Go(player.Player):
     def get_random_bot_action(self, p, table):
         if table.plyr_dict[p].stack == 0:
@@ -21,7 +23,7 @@ class Stop_n_Go(player.Player):
                 if table.min_bet >= table.plyr_dict[p].stack:
                     return ('all_in', table.plyr_dict[p].stack)
                 else: # enough for legal bet
-                    return ('raise', randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1)))
+                    return ('raise', randrange(max(table.pot//3,table.min_bet), min(table.pot*2, table.plyr_dict[p].stack)+1))
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.plyr_dict[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet
@@ -33,7 +35,7 @@ class Stop_n_Go(player.Player):
                     if table.min_bet >= table.plyr_dict[p].stack:
                         return ('all_in', table.plyr_dict[p].stack)
                     else: # enough for legal bet
-                        return ('raise', randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1)))
+                        return ('raise', randrange(max(table.pot//3,table.min_bet), min(table.pot*2, table.plyr_dict[p].stack)+1))
         if table.cost_to_play == table.plyr_dict[p].chips_this_round:
             return self.get_random_check_action(p, table)
         else:
@@ -44,7 +46,11 @@ class Stop_n_Go(player.Player):
         if table.min_bet >= table.plyr_dict[p].stack:
             amount = table.plyr_dict[p].stack
         else:
-            amount = randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1))
+            # empty range
+            if max(table.pot//3,table.min_bet) >= min((2*table.pot),table.plyr_dict[p].stack)+1:
+                amount = table.plyr_dict[p].stack
+            else:
+                amount = randrange(max(table.pot//3,table.min_bet), min((2*table.pot),table.plyr_dict[p].stack)+1)
         choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
         #pairs_made = 
@@ -60,7 +66,7 @@ class Stop_n_Go(player.Player):
         choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
         choice += rank_sum
-        if choice <= 65:
+        if choice <= 70:
             return ("fold",0)
         elif choice <= 92:
             return ("call", 0)
@@ -69,42 +75,45 @@ class Stop_n_Go(player.Player):
             if table.plyr_dict[p].stack <= (2 * true_cost):
                 return ('all_in',table.plyr_dict[p].stack)
             else:
-                # working here, bug sometimes creates empty randrange
-                amount = randrange(table.min_bet, table.plyr_dict[p].stack-true_cost+1)
-            return ("raise", amount)
+                if table.min_bet >= (table.plyr_dict[p].stack-true_cost+1):
+                    return ('all_in', table.plyr_dict[p].stack)
+                amount = randrange(table.min_bet, (table.plyr_dict[p].stack-true_cost+1))
+                return ("raise", amount)
 ####################################################################################################################
 
 # Loose Aggressive, currently same as 'random'
 # change to 'if check action: bet wide range, if call action: raise wide range
 class Loose_Aggressive(player.Player):
     def get_random_bot_action(self, p, table):
+        rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
         if table.plyr_dict[p].stack == 0:
             return ('check',0)
         # bot big blind special option actions
         elif len(table.seat_order) == 2 and table.round == 1 and p == table.seat_order[1] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
             # 2 plyr bb options, check, bet
-            choice = randrange(0,2)
-            if choice:
+            choice = randrange(0,100)
+            choice += rank_sum
+            if choice < 60:
                 return ('check',0)
             else:
-                # if not enough for legal raise
+                # if not enough for legal bet
                 if table.min_bet >= table.plyr_dict[p].stack:
-                    return ('all_in', 0)
-                else: # enough for legal raise
-                    return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
-        # bug here, can't reference seat_order[2] unless it exists
+                    return ('all_in', table.plyr_dict[p].stack)
+                else: # enough for legal bet, potential bug empty range
+                    return ('raise', randrange(max(table.pot//3,table.min_bet), min(table.pot*2, table.plyr_dict[p].stack)+1))
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.plyr_dict[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet
-                choice = randrange(0,2)
-                if choice:
+                choice = randrange(0,100)
+                choice += rank_sum
+                if choice < 60:
                     return ('check',0)
                 else:
-                    # if not enough for legal raise
+                    # if not enough for legal bet
                     if table.min_bet >= table.plyr_dict[p].stack:
-                        return ('all_in', 0)
-                    else: # enough for legal raise
-                        return ('raise', randrange(table.min_bet, table.plyr_dict[p].stack+1))
+                        return ('all_in', table.plyr_dict[p].stack)
+                    else: # enough for legal bet
+                        return ('raise', randrange(max(table.pot//3,table.min_bet), min(table.pot*2, table.plyr_dict[p].stack)+1))
         if table.cost_to_play == table.plyr_dict[p].chips_this_round:
             return self.get_random_check_action(p, table)
         else:

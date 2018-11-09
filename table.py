@@ -22,7 +22,7 @@ class Table():
         for p in self.seat_order:
             if p != 'player1':
                 self.plyr_dict[p].human = 0
-                choice = randrange(0,4)
+                choice = 2
                 if choice == 0:
                     self.plyr_dict[p] = bot_profiles.Calling_Station(stack = num_chips)
                     self.plyr_dict[p].bot_profile = 'calling_station'
@@ -382,6 +382,8 @@ class Table():
             tbs = [self.plyr_dict[p].tie_break[:] for p in highplyrs]
             plyrs_tbs_tups = [(highplyrs[i], tbs[i]) for i in range(len(highplyrs))]
             dict = self.reward(pot, self.break_ties(plyrs_tbs_tups))
+            # bug around here, pd[p].tie_break is getting destructed when called mult times,
+            # same players break ties across multiple pots
             for k in dict.keys():
                 if k not in main_dict.keys():
                     main_dict[k] = dict[k]
@@ -466,6 +468,12 @@ if __name__ == "__main__":
     t.plyr_dict[t.seat_order[8]].hand = [(4,'D'), (9,'D')] # 1pair with lower tiebreak
     for i,p in enumerate(t.seat_order):
         t.assign_hand_rank(p)
+        
+##############################################
+# TEST break_ties()
+# input --> [('player1',[14,13,12,11,10]), ('player2',[14,13,12,11,10])]
+    x = [('player1',[14,13,12,11,10]), ('player2',[14,13,12,11,10])]
+    print(t.break_ties(x))
 ##############################################
 # TEST SUITE for create_pots()
 # need to assert that amounts after showdown() with create_pots() are the same amounts of chips
