@@ -24,17 +24,18 @@ class Table():
                 self.plyr_dict[p].human = 0
                 choice = randrange(0,4)
                 if choice == 0:
-                    self.plyr_dict[p].bot_profile = 'calling_station'
                     self.plyr_dict[p] = bot_profiles.Calling_Station(stack = num_chips)
+                    self.plyr_dict[p].bot_profile = 'calling_station'
                 elif choice == 1:
-                    self.plyr_dict[p].bot_profile = 'tight_aggressive'
                     self.plyr_dict[p] = bot_profiles.Tight_Aggressive(stack = num_chips)
+                    self.plyr_dict[p].bot_profile = 'tight_aggressive'
                 elif choice == 2:
-                    self.plyr_dict[p].bot_profile = 'stop_n_go'
                     self.plyr_dict[p] = bot_profiles.Stop_n_Go(stack = num_chips)
+                    self.plyr_dict[p].bot_profile = 'stop_n_go'
                 elif choice == 3:
-                    self.plyr_dict[p].bot_profile = 'loose_aggressive'
                     self.plyr_dict[p] = bot_profiles.Loose_Aggressive(stack = num_chips)
+                    self.plyr_dict[p].bot_profile = 'loose_aggressive'
+                print(self.plyr_dict[p].bot_profile)
             else:
                 self.plyr_dict[p].human = 1
         

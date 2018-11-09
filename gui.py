@@ -1,6 +1,7 @@
 # TO DO
 
 '''
+more than enough to call but not enough for legal raise, in get_random_call_action-->raise
  File "gui.py", line 131, in populate
     bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
   File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/player.py", line 68, in get_random_bot_action
@@ -12,6 +13,154 @@
 ValueError: empty range for randrange() (1089,444, -645)
 
 '''
+'''
+still some errors in create_pots() tests, possibly just created by illegal player/pot configurations in tests
+
+begin hand chips 928
+chips in pot 472
+stack 456
+player5
+begin hand chips 535
+chips in pot 535
+stack 0
+player8
+begin hand chips 934
+chips in pot 934
+stack 0
+player6
+begin hand chips 243
+chips in pot 243
+stack 0
+player1
+begin hand chips 595
+chips in pot 79
+stack 516
+player3
+begin hand chips 523
+chips in pot 455
+stack 68
+player4
+begin hand chips 727
+chips in pot 561
+stack 166
+player2
+begin hand chips 352
+chips in pot 352
+stack 0
+player7
+begin hand chips 718
+chips in pot 649
+stack 69
+['player8']
+returned this many chips 399
+pre-subtract small stacks [243, 352, 535]
+post-subtract small stacks [243, 352, 535]
+pots [2023, 2786, 3741]
+return pots_plyrs  [(2023, ['player5', 'player8', 'player6', 'player2']), (763, ['player5', 'player8', 'player2']), (955, ['player5', 'player8'])]
+sum_pots 3741 created_chips_total 3881
+Traceback (most recent call last):
+  File "table.py", line 508, in <module>
+    assert(created_chips_total == sum_pots)
+AssertionError
+####################################
+player9
+begin hand chips 767
+chips in pot 238
+stack 529
+player4
+begin hand chips 560
+chips in pot 328
+stack 232
+player2
+begin hand chips 925
+chips in pot 849
+stack 76
+player5
+begin hand chips 117
+chips in pot 83
+stack 34
+player1
+begin hand chips 110
+chips in pot 8
+stack 102
+player3
+begin hand chips 544
+chips in pot 544
+stack 0
+player6
+begin hand chips 88
+chips in pot 88
+stack 0
+player7
+begin hand chips 671
+chips in pot 671
+stack 0
+player8
+begin hand chips 150
+chips in pot 150
+stack 0
+['player7']
+returned this many chips 127
+pre-subtract small stacks [88, 150, 544]
+post-subtract small stacks [88, 150, 544]
+pots [707, 1079, 2527]
+return pots_plyrs  [(707, ['player3', 'player6', 'player7', 'player8']), (372, ['player3', 'player7', 'player8']), (1448, ['player3', 'player7'])]
+sum_pots 2527 created_chips_total 2832
+Traceback (most recent call last):
+  File "table.py", line 508, in <module>
+    assert(created_chips_total == sum_pots)
+AssertionError
+#####################################
+player5
+begin hand chips 482
+chips in pot 482
+stack 0
+player4
+begin hand chips 522
+chips in pot 522
+stack 0
+player1
+begin hand chips 149
+chips in pot 149
+stack 0
+player6
+begin hand chips 31
+chips in pot 8
+stack 23
+player9
+begin hand chips 522
+chips in pot 16
+stack 506
+player2
+begin hand chips 799
+chips in pot 628
+stack 171
+player3
+begin hand chips 619
+chips in pot 619
+stack 0
+player7
+begin hand chips 433
+chips in pot 433
+stack 0
+player8
+begin hand chips 107
+chips in pot 51
+stack 56
+['player3']
+returned this many chips 97
+pre-subtract small stacks [149, 433, 482, 522]
+post-subtract small stacks [149, 433, 482, 522]
+pots [969, 2389, 2585, 2705]
+return pots_plyrs  [(969, ['player5', 'player4', 'player1', 'player3', 'player7']), (1420, ['player5', 'player4', 'player3', 'player7']), (196, ['player5', 'player4', 'player3']), (120, ['player4', 'player3'])]
+sum_pots 2705 created_chips_total 2811
+Traceback (most recent call last):
+  File "table.py", line 508, in <module>
+    assert(created_chips_total == sum_pots)
+AssertionError
+####################################
+'''
+
 
 # prob with less than legal all-in/raise/call and blinds folding
 # error 3 player, dealer has less than legal call (less than sb/bb), goes all-in stack say 4 with bb 20, next bot FOLDS
@@ -393,7 +542,10 @@ class Table_window(tk.Frame):
         for plyr in plyrOrder:
             self.w = tk.Frame(self.background,relief='ridge',bd=4,background='black')
             self.w.info = tk.Frame(self.w,relief='ridge',bd=3,background='black')
-            self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/playerImage.gif').resize((60,50)))
+            if room.table.plyr_dict[plyr].bot_profile == 'stop_n_go':
+                self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/stop_n_go.gif').resize((60,50)))  
+            else:
+                self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/playerImage.gif').resize((60,50)))
             self.w.pic = tk.Label(self.w.info,image=self.w.plyrImg,bg='black')
             self.w.pic.pack(side='left')
             self.w.player = tk.Label(self.w.info,text=plyr,fg='wheat3',bg='black')
