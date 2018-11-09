@@ -17,10 +17,10 @@ class Stop_n_Go(player.Player):
             if choice <= 25:
                 return ('check',0)
             else:
-                # if not enough for legal raise
-                if table.min_bet >= table.plyr_dict[p].stack: # causing to 'all_in' against other 'all_in' often bug
+                # if not enough for legal bet
+                if table.min_bet >= table.plyr_dict[p].stack:
                     return ('all_in', table.plyr_dict[p].stack)
-                else: # enough for legal raise
+                else: # enough for legal bet
                     return ('raise', randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1)))
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.plyr_dict[p].chips_this_round:
             if table.seat_order[2] == p:
@@ -29,10 +29,10 @@ class Stop_n_Go(player.Player):
                 if choice <= 25:
                     return ('check',0)
                 else:
-                    # if not enough for legal raise
+                    # if not enough for legal bet
                     if table.min_bet >= table.plyr_dict[p].stack:
                         return ('all_in', table.plyr_dict[p].stack)
-                    else: # enough for legal raise
+                    else: # enough for legal bet
                         return ('raise', randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1)))
         if table.cost_to_play == table.plyr_dict[p].chips_this_round:
             return self.get_random_check_action(p, table)
@@ -45,11 +45,11 @@ class Stop_n_Go(player.Player):
             amount = table.plyr_dict[p].stack
         else:
             amount = randrange(table.min_bet, min((3*table.min_bet),table.plyr_dict[p].stack+1))
-        choice = randrange(0,99)
+        choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
         #pairs_made = 
         choice += rank_sum
-        if choice <= 40:
+        if choice <= 60:
             return ("check",0)
         else:
             return ('bet', amount)
@@ -57,18 +57,19 @@ class Stop_n_Go(player.Player):
     def get_random_call_action(self,p,table):
         true_cost = table.cost_to_play - table.plyr_dict[p].chips_this_round
         print('rand call act true_cost ' + str(true_cost))
-        choice = randrange(0,99)
+        choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
         choice += rank_sum
-        if choice <= 30:
+        if choice <= 65:
             return ("fold",0)
-        elif choice <= 85:
+        elif choice <= 92:
             return ("call", 0)
         else:
             # if not enough for legal raise
             if table.plyr_dict[p].stack <= (2 * true_cost):
                 return ('all_in',table.plyr_dict[p].stack)
             else:
+                # working here, bug sometimes creates empty randrange
                 amount = randrange(table.min_bet, table.plyr_dict[p].stack-true_cost+1)
             return ("raise", amount)
 ####################################################################################################################
