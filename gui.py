@@ -1,5 +1,19 @@
 # TO DO
 
+'''
+ File "gui.py", line 131, in populate
+    bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/player.py", line 68, in get_random_bot_action
+    if table.cost_to_play == table.plyr_dict[p].chips_this_round:
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/player.py", line 90, in get_random_call_action
+    if table.plyr_dict[p].stack <= (2 * true_cost):
+  File "/Users/crazyfox/anaconda3/lib/python3.7/random.py", line 200, in randrange
+    raise ValueError("empty range for randrange() (%d,%d, %d)" % (istart, istop, width))
+ValueError: empty range for randrange() (1089,444, -645)
+
+'''
+
+# prob with less than legal all-in/raise/call and blinds folding
 # error 3 player, dealer has less than legal call (less than sb/bb), goes all-in stack say 4 with bb 20, next bot FOLDS
 # is fold expected? what to do about less than legal all-in/call/raise? if bb can fold but ss cannot win even the entire
 # bb, chips should be in main_pot for sb player non-ss non-bb, should be returned to remaining player in hand with ss

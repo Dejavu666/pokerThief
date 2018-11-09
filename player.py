@@ -6,9 +6,12 @@ class Player():
         self.chips_this_round = 0
         self.begin_hand_chips = 0
         self.chips_in_pot = 0
-        self.human = 1
+        self.human = 0
         self.hand_rank = 0
         self.tie_break = []
+        
+        # of 'random', 'calling_station', 'tight_aggressive', 'loose_aggressive', 'stop_n_go'
+        self.bot_profile = 'random'
         
     def str_hand(self):
         new_hand = []
@@ -86,6 +89,8 @@ class Player():
             # if not enough for legal raise
             if table.plyr_dict[p].stack <= (2 * true_cost):
                 return ('all_in',0)
+            # working here, bug BUG
+            # what about not enough for even legal call?, see error at top of gui page
             else:
                 amount = randrange(table.min_bet, table.plyr_dict[p].stack-true_cost+1)
             return ("raise", amount)

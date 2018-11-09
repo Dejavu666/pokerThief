@@ -1,5 +1,5 @@
 import pdb
-import player, deck, hands
+import player, deck, hands, bot_profiles
 from random import shuffle, randrange
 from copy import deepcopy
 
@@ -22,6 +22,19 @@ class Table():
         for p in self.seat_order:
             if p != 'player1':
                 self.plyr_dict[p].human = 0
+                choice = randrange(0,4)
+                if choice == 0:
+                    self.plyr_dict[p].bot_profile = 'calling_station'
+                    self.plyr_dict[p] = bot_profiles.Calling_Station(stack = num_chips)
+                elif choice == 1:
+                    self.plyr_dict[p].bot_profile = 'tight_aggressive'
+                    self.plyr_dict[p] = bot_profiles.Tight_Aggressive(stack = num_chips)
+                elif choice == 2:
+                    self.plyr_dict[p].bot_profile = 'stop_n_go'
+                    self.plyr_dict[p] = bot_profiles.Stop_n_Go(stack = num_chips)
+                elif choice == 3:
+                    self.plyr_dict[p].bot_profile = 'loose_aggressive'
+                    self.plyr_dict[p] = bot_profiles.Loose_Aggressive(stack = num_chips)
             else:
                 self.plyr_dict[p].human = 1
         
