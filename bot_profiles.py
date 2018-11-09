@@ -6,17 +6,24 @@ from random import randrange
 
 # for all bots... rank_sum increases action, made_pairs incr action, draws to pot odds, adjust bet sizes rel to pot
 
+
 # Stop n Go
 # working on...'if check action: bet wide range, if call action: call wide range'
 class Stop_n_Go(player.Player):
     def get_random_bot_action(self, p, table):
+        rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
+        made_pair = 0
+        if table.plyr_dict[p].hand[0][0] == table.plyr_dict[p].hand[1][0]:
+            made_pair += table.plyr_dict[p].hand[0][0]
         if table.plyr_dict[p].stack == 0:
             return ('check',0)
         # bot big blind special option actions
-        elif len(table.seat_order) == 2 and table.round == 1 and p == table.seat_order[1] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
+        if len(table.seat_order) == 2 and table.round == 1 and p == table.seat_order[1] and table.cost_to_play == table.plyr_dict[p].chips_this_round:
             # 2 plyr bb options, check, bet
             choice = randrange(0,99)
-            if choice <= 25:
+            choice += rank_sum//2
+            choice += made_pair
+            if choice <= 45:
                 return ('check',0)
             else:
                 # if not enough for legal bet
@@ -53,9 +60,28 @@ class Stop_n_Go(player.Player):
                 amount = randrange(max(table.pot//3,table.min_bet), min((2*table.pot),table.plyr_dict[p].stack)+1)
         choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
-        #pairs_made = 
-        choice += rank_sum
-        if choice <= 60:
+        made_pairs = 0
+        all_ranks = [table.plyr_dict[p].hand[0][0], table.plyr_dict[p].hand[1][0]]
+        for card in table.com_cards:
+            all_ranks.append(card[0])
+        quads = []
+        trips = []
+        pairs = []
+        for rank in all_ranks:
+            if all_ranks.count(rank) == 4:
+                quads.append(rank)
+            elif all_ranks.count(rank) == 3:
+                trips.append(rank)
+            elif all_ranks.count(rank) == 2:
+                pairs.append(rank)
+        if quads != []:
+            choice += 3*max(quads)
+        if trips != []:
+            choice += 2*max(trips)
+        if pairs != []:
+            choice += max(pairs)
+        choice += rank_sum//2
+        if choice <= 15:
             return ("check",0)
         else:
             return ('bet', amount)
@@ -65,10 +91,30 @@ class Stop_n_Go(player.Player):
         print('rand call act true_cost ' + str(true_cost))
         choice = randrange(0,100)
         rank_sum = table.plyr_dict[p].hand[0][0] + table.plyr_dict[p].hand[1][0]
-        choice += rank_sum
-        if choice <= 70:
+        made_pairs = 0
+        all_ranks = [table.plyr_dict[p].hand[0][0], table.plyr_dict[p].hand[1][0]]
+        for card in table.com_cards:
+            all_ranks.append(card[0])
+        quads = []
+        trips = []
+        pairs = []
+        for rank in all_ranks:
+            if all_ranks.count(rank) == 4:
+                quads.append(rank)
+            elif all_ranks.count(rank) == 3:
+                trips.append(rank)
+            elif all_ranks.count(rank) == 2:
+                pairs.append(rank)
+        if quads != []:
+            choice += 3*max(quads)
+        if trips != []:
+            choice += 2*max(trips)
+        if pairs != []:
+            choice += max(pairs)
+        choice += rank_sum//2
+        if choice <= 75:
             return ("fold",0)
-        elif choice <= 92:
+        elif choice <= 95:
             return ("call", 0)
         else:
             # if not enough for legal raise
@@ -80,6 +126,10 @@ class Stop_n_Go(player.Player):
                 amount = randrange(table.min_bet, (table.plyr_dict[p].stack-true_cost+1))
                 return ("raise", amount)
 ####################################################################################################################
+
+
+
+
 
 # Loose Aggressive, currently same as 'random'
 # change to 'if check action: bet wide range, if call action: raise wide range
