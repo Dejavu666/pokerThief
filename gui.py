@@ -1,7 +1,9 @@
 # TO DO
 
+# make 'show hands' function in gui start_game_bar
 
 '''
+tbs should be list of lists, when elems are exhausted, first elem should be empty list, something destructed somewhere
     if tbs[0] == []: # no more elements to tiebreak
 IndexError: list index out of range
 '''
@@ -479,10 +481,19 @@ class Player_window(tk.Frame):
 class Start_game_bar(tk.Frame):
     def __init__(self,parent):
         tk.Frame.__init__(self,parent,bg='black',relief='ridge',bd=4)
-        self.b=tk.Button(self,takefocus=1,text="Start Game!",highlightbackground='black',command=self.startGameEntries)
+        self.b = tk.Button(self,takefocus=1,text="Start Game!",highlightbackground='black',command=self.startGameEntries)
         self.b.pack(side='left')
         self.quitButton = tk.Button(self,takefocus=1,text='Quit',highlightbackground='black',command=self.areYouSureQuit)
         self.quitButton.pack(side='left')
+        self.b2 = tk.Button(self, takefocus=1, text= 'Show All Hands', highlightbackground='black', command=self.show_hands)
+        self.b2.pack(side='left')
+        
+    def show_hands(self):
+        for p in room.table.seat_order:
+            room.imageList[p].img1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[p].str_hand()[0]+'.gif'))
+            room.imageList[p].img2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[p].str_hand()[1]+'.gif'))
+            room.imageList[p].c1.configure(image=room.imageList[p].img1)
+            room.imageList[p].c2.configure(image=room.imageList[p].img2)
     
     def areYouSureQuit(self):
         self.quitGamePopup = QuitGamePopup(self)
