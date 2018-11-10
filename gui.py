@@ -1,5 +1,7 @@
 # TO DO
 
+# 2 player preflop bot play..., rare raise amount is too much, fold to min_raises often, check-raises, reraises
+
 # make 'show hands' function in gui start_game_bar
 
 '''
@@ -208,22 +210,13 @@ AssertionError
 
 # unique player image faces
 
-# wager entry slider rounds to nearest 10, bots bet in increments of 1, could fix and avoid rounding errors, odd chips
-# with incrementing bets to 10's
-
 # One player remains, end screen/new table
-
-# don't allow fold when all-in for bots 'auto-check when all-in'
 
 # fix gui grid layout? should use place for exact x,y coords of N plyrs equidistant from each other around an oval 
 
 # post_blinds() using floor division without accounting for remainder with odd stacks (happens after chip split)
 
-# next_hand() create prompt instead of moving directly into hand
-
 # Tell hand type, highlight community cards used in hand
-
-# change on init to create one human, N bots
 
 import pdb
 import table
