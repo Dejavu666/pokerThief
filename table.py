@@ -210,7 +210,7 @@ class Table():
         self.cost_to_play += amount
         self.left_to_act.remove(plyr)
         # if amount is less than legal raise, do not reopen betting except to call !!
-        # working here bug here
+        # working here bug here, as is might be fine...
         if amount > self.min_bet:
             self.min_bet = amount
         self.repop_left_to_act(plyr)
@@ -376,17 +376,14 @@ class Table():
         for p in self.in_hand:
             self.assign_hand_rank(p)
         for pot_plyr in pots_plyrs_tup:
-            print('pot_plyr in pots_plyrs_tup showdown loop ' + str(pot_plyr)) # val is correct here
-            # bug working here
+            print('pot_plyr in pots_plyrs_tup showdown loop ' + str(pot_plyr))
             high = max([self.pd[p].hand_rank for p in pot_plyr[1]])
             pot = pot_plyr[0]
             highplyrs = [p for p in pot_plyr[1] if self.pd[p].hand_rank == high]
-            print('pot and plyrs with highest hand rank from tuple ' + str(pot) + ' ' + str(highplyrs))# highplyrs empty
+            print('pot and plyrs with highest hand rank from tuple ' + str(pot) + ' ' + str(highplyrs))
             tbs = [self.pd[p].tie_break[:] for p in highplyrs]
             plyrs_tbs_tups = [(highplyrs[i], tbs[i]) for i in range(len(highplyrs))]
             dict = self.reward(pot, self.break_ties(plyrs_tbs_tups))
-            # bug around here, pd[p].tie_break is getting destructed when called mult times,
-            # same players break ties across multiple pots
             for k in dict.keys():
                 if k not in main_dict.keys():
                     main_dict[k] = dict[k]
@@ -523,62 +520,3 @@ if __name__ == "__main__":
     assert(created_chips_total == sum_pots)
     print('sum_pots ' + str(sum_pots) + ' ' + 'created_chips_total ' + str(created_chips_total))
     
-'''
-'player1', 'player2']
-val is 560
-val is 770
-val is 610
-val is 770
-val is 630
-val is 330
-val is 670
-val is 160
-val is 200
-player3
-begin hand chips 560
-chips in pot 380
-stack 180
-player2
-begin hand chips 770
-chips in pot 670
-stack 100
-player9
-begin hand chips 610
-chips in pot 90
-stack 520
-player8
-begin hand chips 770
-chips in pot 770
-stack 0
-player7
-begin hand chips 630
-chips in pot 630
-stack 0
-player1
-begin hand chips 330
-chips in pot 20
-stack 310
-player5
-begin hand chips 670
-chips in pot 580
-stack 90
-player4
-begin hand chips 160
-chips in pot 110
-stack 50
-player6
-begin hand chips 200
-chips in pot 200
-stack 0
-['player8']
-returned this many chips 140
-pre-subtract small stacks [200, 630]
-post-subtract small stacks [200, 630]
-pots [1420, 3270]
-return pots_plyrs  [(1420, ['player8', 'player7', 'player6']), (1850, ['player8', 'player7'])]
-sum_pots 3270 created_chips_total 3310
-Traceback (most recent call last):
-  File "table.py", line 521, in <module>
-    assert(created_chips_total == sum_pots)
-AssertionError
-'''

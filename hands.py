@@ -1,6 +1,4 @@
-# hands.py has functions that evaluate player hands for type and resolves ties among them
-# Only call 'break_ties()' and 'assign_hand_rank()'
-# Other functions must be controlled by 'assign_hand_rank()'
+# hands.py has functions that evaluate player hands, called by table.assign_hand_rank()
 
 # NEED TO: Test that straight_flush is found when having higher flush cards, middle straight
 

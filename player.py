@@ -52,7 +52,6 @@ class Player():
                     return ('all_in', 0)
                 else: # enough for legal raise
                     return ('raise', randrange(table.min_bet, table.pd[p].stack+1))
-        # bug here, can't reference seat_order[2] unless it exists
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.pd[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet

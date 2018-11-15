@@ -149,8 +149,11 @@ class Loose_Aggressive(player.Player):
                 # if not enough for legal bet
                 if table.min_bet >= table.pd[p].stack:
                     return ('all_in', table.pd[p].stack)
-                else: # enough for legal bet, potential bug empty range
-                    return ('raise', randrange(max(table.pot//3,table.min_bet), min(table.pot*2, table.pd[p].stack)+1))
+                # if range is empty
+                elif (max(table.pot//3,table.min_bet)//10*10) <= (min(table.pot*2,table.pd[p].stack)+1):
+                    return ('all_in', table.pd[p].stack)
+                else: # enough for legal bet
+                    return ('raise', randrange(max(table.pot//3,table.min_bet)//10*10, min(table.pot*2, table.pd[p].stack)+1),10)
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.pd[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet
@@ -210,7 +213,6 @@ class Tight_Aggressive(player.Player):
                     return ('all_in', 0)
                 else: # enough for legal raise
                     return ('raise', randrange(table.min_bet, table.pd[p].stack+1))
-        # bug here, can't reference seat_order[2] unless it exists
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.pd[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet
@@ -269,7 +271,6 @@ class Calling_Station(player.Player):
                     return ('all_in', 0)
                 else: # enough for legal raise
                     return ('raise', randrange(table.min_bet, table.pd[p].stack+1))
-        # bug here, can't reference seat_order[2] unless it exists
         if len(table.seat_order) > 2 and table.round == 1 and table.cost_to_play == table.pd[p].chips_this_round:
             if table.seat_order[2] == p:
                 # more than 2 plyr bb options, check, bet
