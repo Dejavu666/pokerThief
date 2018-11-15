@@ -1,5 +1,15 @@
 # TO DO
 
+# bot should not randomly shove with nothing into insignificant pot EVER
+
+# in general, bot bets are too large, pots accelerate too quickly, get knocked out quickly
+
+# heads up play preflop, easy decisions... always play certain hands...bots should not randomly fold AK AA KK QQ preflop
+# preflop raises too large, constrain to pot/minbet, slowplay nuts situations... AA KK preflop...flopped top hands
+# should not ever randomly all-in/raise with smaller pots...esp bad hands
+# preflop headsup always try to at least play pairs, call/small raise/build pot, be willing to call reraise of any
+#   with AK and pairs down to 9s... possibly more
+
 # 2 player preflop bot play..., rare raise amount is too much, fold to min_raises often, check-raises, reraises
 
 # make 'show hands' function in gui start_game_bar
@@ -8,46 +18,6 @@
 tbs should be list of lists, when elems are exhausted, first elem should be empty list, something destructed somewhere
     if tbs[0] == []: # no more elements to tiebreak
 IndexError: list index out of range
-'''
-'''
-rand call act true_cost 40
-apply bot action player2 raise 153
-Raise gui error prob from bot which doesnt use wagerEntry
-options in populate call_options
-rand check act table.min_bet 20
-Exception in Tkinter callback
-Traceback (most recent call last):
-  File "/Users/crazyfox/anaconda3/lib/python3.7/tkinter/__init__.py", line 1702, in __call__
-    return self.func(*args)
-  File "gui.py", line 262, in <lambda>
-    self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
-  File "gui.py", line 349, in call
-    room.player_window.get_actions()
-  File "gui.py", line 223, in get_actions
-    room.player_window.populate(plyr, options)
-  File "gui.py", line 298, in populate
-    bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
-  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/bot_profiles.py", line 40, in get_random_bot_action
-    return self.get_random_check_action(p, table)
-  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/bot_profiles.py", line 49, in get_random_check_action
-    amount = randrange(max(table.pot//3,table.min_bet), min((2*table.pot),table.plyr_dict[p].stack)+1)
-  File "/Users/crazyfox/anaconda3/lib/python3.7/random.py", line 200, in randrange
-    raise ValueError("empty range for randrange() (%d,%d, %d)" % (istart, istop, width))
-ValueError: empty range for randrange() (145,128, -17)
-'''
-
-'''
-more than enough to call but not enough for legal raise, in get_random_call_action-->raise
- File "gui.py", line 131, in populate
-    bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
-  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/player.py", line 68, in get_random_bot_action
-    if table.cost_to_play == table.plyr_dict[p].chips_this_round:
-  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/player.py", line 90, in get_random_call_action
-    if table.plyr_dict[p].stack <= (2 * true_cost):
-  File "/Users/crazyfox/anaconda3/lib/python3.7/random.py", line 200, in randrange
-    raise ValueError("empty range for randrange() (%d,%d, %d)" % (istart, istop, width))
-ValueError: empty range for randrange() (1089,444, -645)
-
 '''
 '''
 still some errors in create_pots() tests, possibly just created by illegal player/pot configurations in tests
@@ -218,7 +188,7 @@ AssertionError
 
 # Tell hand type, highlight community cards used in hand
 
-import pdb
+#import pdb
 import table
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -253,19 +223,19 @@ class Player_window(tk.Frame):
         self.b1.pack(side='left')
         self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
         self.b2.pack(side='left')
-        self.wagerEntry = tk.Scale(self,from_=min(room.table.plyr_dict[plyr].stack,room.table.min_bet),to=room.table.plyr_dict[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
+        self.wagerEntry = tk.Scale(self,from_=min(room.table.pd[plyr].stack,room.table.min_bet),to=room.table.pd[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
         self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
     def create_call_all_in_buttons(self, plyr):
-        self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
+        self.b1 = tk.Button(self,text='Call '+str(min(room.table.pd[plyr].stack,room.table.cost_to_play-room.table.pd[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
         self.b1.pack(side='left')
         # player cannot raise if only enough to call, do not create the button
-        if room.table.plyr_dict[plyr].stack > room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round:
+        if room.table.pd[plyr].stack > room.table.cost_to_play-room.table.pd[plyr].chips_this_round:
             self.b2 = tk.Button(self,text='All-In',highlightbackground='black',font=('Helvetica',16),command=lambda:self.all_in(plyr))
             self.b2.pack(side='left')
-            self.wagerEntry = tk.Scale(self,from_=room.table.plyr_dict[plyr].stack,to=room.table.plyr_dict[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
+            self.wagerEntry = tk.Scale(self,from_=room.table.pd[plyr].stack,to=room.table.pd[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
             self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
@@ -275,28 +245,28 @@ class Player_window(tk.Frame):
         self.b1.pack(side='left')
         self.b2 = tk.Button(self,text='Bet',highlightbackground='black',font=('Helvetica',16),command=lambda:self.bet(plyr))
         self.b2.pack(side='left')
-        self.wagerEntry = tk.Scale(self,from_=min(room.table.plyr_dict[plyr].stack,room.table.min_bet),to=room.table.plyr_dict[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
+        self.wagerEntry = tk.Scale(self,from_=min(room.table.pd[plyr].stack,room.table.min_bet),to=room.table.pd[plyr].stack,orient='horizontal',resolution=10,bg='black',fg='wheat3')
         self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
     def create_call_buttons(self,plyr):
-        self.b1 = tk.Button(self,text='Call '+str(min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
+        self.b1 = tk.Button(self,text='Call '+str(min(room.table.pd[plyr].stack,room.table.cost_to_play-room.table.pd[plyr].chips_this_round)),highlightbackground='black',font=('Helvetica',16),command=lambda:self.call(plyr))
         self.b1.pack(side='left')
         # player cannot raise if only enough to call, do not create the button
-        if room.table.plyr_dict[plyr].stack > room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round:
+        if room.table.pd[plyr].stack > room.table.cost_to_play-room.table.pd[plyr].chips_this_round:
             self.b2 = tk.Button(self,text='Raise',highlightbackground='black',font=('Helvetica',16),command=lambda:self.Raise(plyr))
             self.b2.pack(side='left')
-            self.wagerEntry = tk.Scale(self,from_=min(room.table.plyr_dict[plyr].stack-room.table.cost_to_play+room.table.plyr_dict[plyr].chips_this_round,room.table.min_bet),to=min(room.table.plyr_dict[plyr].stack,room.table.plyr_dict[plyr].stack-room.table.cost_to_play+room.table.plyr_dict[plyr].chips_this_round),orient='horizontal',resolution=10,bg='black',fg='wheat3')
+            self.wagerEntry = tk.Scale(self,from_=min(room.table.pd[plyr].stack-room.table.cost_to_play+room.table.pd[plyr].chips_this_round,room.table.min_bet),to=min(room.table.pd[plyr].stack,room.table.pd[plyr].stack-room.table.cost_to_play+room.table.pd[plyr].chips_this_round),orient='horizontal',resolution=10,bg='black',fg='wheat3')
             self.wagerEntry.pack(side='left')
         self.b3 = tk.Button(self,text='Fold',highlightbackground='black',font=('Helvetica',16),command=lambda:self.fold(plyr))
         self.b3.pack(side='left')
         
     def create_current_plyr_image(self,plyr):
         self.plyrMsg.configure(text='What will '+plyr+' do?')
-        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[0]+'.gif'))
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[plyr].str_hand()[0]+'.gif'))
         self.card1.configure(image=self.cardimg1)
-        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[plyr].str_hand()[1]+'.gif'))
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[plyr].str_hand()[1]+'.gif'))
         self.card2.configure(image=self.cardimg2)
         
     # working here, bots after refactor
@@ -313,11 +283,11 @@ class Player_window(tk.Frame):
     # Called by get_actions(), figures out what buttons/images in player_window
     def populate(self, plyr, options):
         # FOR BOTS FROM THE FUTURE
-        if room.table.plyr_dict[plyr].human == 0:
+        if room.table.pd[plyr].human == 0:
             room.player_window.destroy_buttons()
             self.create_bot_plyr_img(plyr)
             # working here bug BUG not really bug add bot action print and delay
-            bot_action, maybe_amount = room.table.plyr_dict[plyr].get_random_bot_action(plyr, room.table)
+            bot_action, maybe_amount = room.table.pd[plyr].get_random_bot_action(plyr, room.table)
             room.after(1000, self.show_bot_action, plyr, bot_action, maybe_amount)
             room.after(3000, self.apply_bot_action, plyr, bot_action, maybe_amount)
         else:# PUNY HUMANS
@@ -351,7 +321,7 @@ class Player_window(tk.Frame):
             self.call(p)
         
     def all_in(self, plyr):
-        amount = room.table.plyr_dict[plyr].stack
+        amount = room.table.pd[plyr].stack
         room.table_window.update_table_window_cards_and_chips()
         maybe_winner = room.table.apply_action(plyr, 'all_in', amount)
         self.destroy_buttons()
@@ -361,7 +331,7 @@ class Player_window(tk.Frame):
             room.player_window.get_actions()
         
     def call(self, plyr):
-        amount = min(room.table.plyr_dict[plyr].stack,room.table.cost_to_play-room.table.plyr_dict[plyr].chips_this_round)
+        amount = min(room.table.pd[plyr].stack,room.table.cost_to_play-room.table.pd[plyr].chips_this_round)
         room.table_window.update_table_window_cards_and_chips()
         self.destroy_buttons()
         maybe_winner = room.table.apply_action(plyr, 'call', amount)
@@ -375,7 +345,7 @@ class Player_window(tk.Frame):
         try:
             amount = self.wagerEntry.get()
         except:
-            print('Raise gui error prob from bot which doesnt use wagerEntry')
+            pass
         room.table_window.update_table_window_cards_and_chips()
         maybe_winner = room.table.apply_action(plyr, 'raise', amount)
         self.destroy_buttons()
@@ -420,7 +390,7 @@ class Player_window(tk.Frame):
             
     def next_hand(self):
         for plyr in room.table.seat_order:
-            if room.table.plyr_dict[plyr].stack == 0:
+            if room.table.pd[plyr].stack == 0:
                 room.imageList[plyr].destroy()
         room.table.next_hand()
         room.table_window.rotate_dealer_button()
@@ -459,9 +429,9 @@ class Player_window(tk.Frame):
         wnr, amt = winner_dict.popitem()
         print('DEBUG ' + wnr + ' wins ' + str(amt))
         self.plyrMsg.configure(text= wnr + ' wins ' + str(amt))
-        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[0]+'.gif'))
+        self.cardimg1 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[wnr].str_hand()[0]+'.gif'))
         self.card1.configure(image=self.cardimg1)
-        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[wnr].str_hand()[1]+'.gif'))
+        self.cardimg2 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[wnr].str_hand()[1]+'.gif'))
         self.card2.configure(image=self.cardimg2)
         room.imageList[wnr].c1.configure(image=self.cardimg1)
         room.imageList[wnr].c2.configure(image=self.cardimg2)
@@ -483,8 +453,8 @@ class Start_game_bar(tk.Frame):
         
     def show_hands(self):
         for p in room.table.seat_order:
-            room.imageList[p].img1 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[p].str_hand()[0]+'.gif'))
-            room.imageList[p].img2 = ImageTk.PhotoImage(Image.open('res/'+room.table.plyr_dict[p].str_hand()[1]+'.gif'))
+            room.imageList[p].img1 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[p].str_hand()[0]+'.gif'))
+            room.imageList[p].img2 = ImageTk.PhotoImage(Image.open('res/'+room.table.pd[p].str_hand()[1]+'.gif'))
             room.imageList[p].c1.configure(image=room.imageList[p].img1)
             room.imageList[p].c2.configure(image=room.imageList[p].img2)
     
@@ -532,7 +502,7 @@ class Table_window(tk.Frame):
     def update_table_window_cards_and_chips(self):
         self.chips.configure(text=room.table.pot)
         for plyr in room.table.seat_order:
-            room.imageList[plyr].stack.configure(text=room.table.plyr_dict[plyr].stack)
+            room.imageList[plyr].stack.configure(text=room.table.pd[plyr].stack)
         # for card in table.com_cards: update table_window card image
         if room.table.round == 2:
             self.deal_flop()
@@ -578,15 +548,15 @@ class Table_window(tk.Frame):
         for plyr in plyrOrder:
             self.w = tk.Frame(self.background,relief='ridge',bd=4,background='black')
             self.w.info = tk.Frame(self.w,relief='ridge',bd=3,background='black')
-            if room.table.plyr_dict[plyr].bot_profile == 'stop_n_go':
-                self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/stop_n_go.gif').resize((60,50)))  
+            if room.table.pd[plyr].bot_profile == 'expert':
+                self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/expert.gif').resize((60,50)))  
             else:
                 self.w.plyrImg = ImageTk.PhotoImage(Image.open('res/playerImage.gif').resize((60,50)))
             self.w.pic = tk.Label(self.w.info,image=self.w.plyrImg,bg='black')
             self.w.pic.pack(side='left')
             self.w.player = tk.Label(self.w.info,text=plyr,fg='wheat3',bg='black')
             self.w.player.pack(side='top')
-            self.w.stack = tk.Label(self.w.info,text=room.table.plyr_dict[plyr].stack,bg='black',fg='wheat3')
+            self.w.stack = tk.Label(self.w.info,text=room.table.pd[plyr].stack,bg='black',fg='wheat3')
             self.w.stack.pack(side='top')
             self.w.dealerButton = tk.Label(self.w.info,text = '',fg='wheat3',bg='black')
             self.w.dealerButton.pack(side='top')
@@ -725,5 +695,9 @@ root.geometry('1000x700')
 room = Main_application(root)
 room.pack(fill=tk.BOTH, expand=tk.YES)
 
-pdb.run(root.mainloop())
+modulename = 'pdb'
+if modulename in sys.modules:
+    pdb.run(root.mainloop())
+else:
+    root.mainloop()
 

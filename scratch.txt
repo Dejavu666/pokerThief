@@ -1,0 +1,31 @@
+return pots_plyrs  [(510, ['player6', 'player1', 'player4']), (2840, ['player6', 'player4'])]
+pots_plyrs_tup inside showdown  [(510, ['player6', 'player1', 'player4']), (2840, ['player6', 'player4'])]
+pot_plyr in pots_plyrs_tup showdown loop (510, ['player6', 'player1', 'player4'])
+pot and plyrs with highest hand rank from tuple 510 ['player1']
+pot_plyr in pots_plyrs_tup showdown loop (2840, ['player6', 'player4'])
+pot and plyrs with highest hand rank from tuple 2840 []
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "/Users/crazyfox/anaconda3/lib/python3.7/tkinter/__init__.py", line 1702, in __call__
+    return self.func(*args)
+  File "/Users/crazyfox/anaconda3/lib/python3.7/tkinter/__init__.py", line 746, in callit
+    func(*args)
+  File "gui.py", line 313, in apply_bot_action
+    self.check(p)
+  File "gui.py", line 383, in check
+    maybe_winner = room.table.apply_action(plyr, 'check')
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 300, in apply_action
+    self.all_in(plyr, amount)
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 257, in is_round_or_hand_over
+    pots_plyrs_tup = self.create_pots()
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 385, in showdown
+    plyrs_tbs_tups = [(highplyrs[i], tbs[i]) for i in range(len(highplyrs))]
+  File "/Users/crazyfox/Desktop/organized/githubProjects/rewrite_pokerthief/table.py", line 341, in break_ties
+    while(True):
+IndexError: list index out of range
+
+p6 has - js 4c   high card  tb is 14,12,11,8,7
+p1 has - 5d 6h   pair 5s    tb is 5,14,12,8
+p4 has - kc 10d             tb is 14,13,12,10,8
+
+board is - 8s 7s Ac Qh 5c
