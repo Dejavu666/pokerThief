@@ -1,12 +1,12 @@
 from random import randrange
 import player
 
+# really only preflop play from BB position is more defined
+# work on post-flop play get_random_call|check_action()
 
+# avoid dangerous board states if not made hand, 4-to-straight, 4-to-flush
 
-
-# need to encapsulate 'choice' increasing function, takes p,t,hole+com ; returns val of some range
-# representing hand strength given the table state
-
+# Only focus on heads up play right now
 
 # normalize hand_rank_sum between -k and k, subtract from 'choice' for below par hands
 
@@ -14,30 +14,55 @@ import player
 
 # need to know when has 'TOP PAIR' esp for heads up postflop
 
+# Basic Player attributes/methods found in 'player.py'
 class Expert_Bot(player.Player):
+
+    # PRIMARY Function Determines what other functions to be called
     def get_random_bot_action(self, p, t):
         if t.pd[p].stack == 0:
             return ('check',0)
-        choice = randrange(0,100)
         # BIG BLIND special options ONLY 2 PLAYER
+        if self.has_big_blind_option(p,t):
+            return self.has_big_blind_option(p,t)
+        # BOT BIG BLIND special option actions MORE THAN 2 PLAYER Just a PASS right now
+        if self.has_big_blind_option_Kplyrs(p, t):
+            return self.has_big_blind_option_Kplyrs(p, t)
+        # REGULAR (NON-BB) OPTIONS
+        # GET PREFLOP ACTION 2 PLAYERS
+        if len(t.seat_order) == 2 and t.round == 1:
+            if t.cost_to_play == t.pd[p].chips_this_round:
+                return self.get_2PLAYER_PREFLOP_check_action(p, t)
+            else:
+                return self.get_2PLAYER_PREFLOP_call_action(p, t)
+        if len(t.seat_order) > 2 and t.round == 1:# more than 2 PLAYER
+            if t.cost_to_play == t.pd[p].chips_this_round:
+                return self.get_random_call_action(p, t)
+            
+            
+    def has_big_blind_option(self, p, t):
         if len(t.seat_order) == 2 and t.round == 1 and p == t.seat_order[1] and t.cost_to_play == t.pd[p].chips_this_round:
-            hand_eval_sum = self.eval_hole_cards_PREFLOP_2plyrs(p, t)
-            choice += hand_eval_sum
-            # BB bot still has check/raise option
+            choice = randrange(0,100)
+            val = self.eval_hole_cards_PREFLOP_2plyrs(p, t) # val returned is 14-98
+            choice += val # choice is now between 14-197
+            choice = choice//2 # choice is now 7-98
             if choice <= 60:
                 return ('check',0)
             else:# TRY TO RAISE from BB
                 if t.min_bet >= t.pd[p].stack: # not enough for legal RAISE
                     return ('all_in', t.pd[p].stack)
-                else: # enough for legal RAISE, 2plyr BB last2act preflop, 1st2act postflop, pot is always 2*minbet
-                    # only consideration: is stack small enough to warrant thinking about full commit versus fold
-                    # otherwise, at least build pot
+                # empty range also just all_in
+                elif max(t.pot//3,t.min_bet)//10*10 >= min(t.pot*2, t.pd[p].stack)+1:
+                    return ('all_in', t.pd[p].stack)
+                else: # enough for raise
                     return ('raise', randrange(max(t.pot//3,t.min_bet)//10*10, min(t.pot*2, t.pd[p].stack)+1,10))
-        # END 2 PLAYER BIG BLIND SPECIAL OPTIONS
-        # BOT BIG BLIND special option actions MORE THAN 2 PLAYER
+        else:
+            return None
+            
+    def has_big_blind_option_Kplyrs(self, p, t):
         if len(t.seat_order) > 2 and t.round == 1 and t.cost_to_play == t.pd[p].chips_this_round:
             if t.seat_order[2] == p:
-                # more than 2 plyr bb options, check, bet
+                pass
+                '''                # more than 2 plyr bb options, check, bet
                 if choice <= 55:
                     return ('check',0)
                 else:
@@ -46,42 +71,29 @@ class Expert_Bot(player.Player):
                         return ('all_in', t.pd[p].stack)
                     else: # enough for legal bet
                         return ('raise', randrange(max(t.pot//3,t.min_bet)//10*10, min(t.pot*2, t.pd[p].stack)+1,10))
-        if t.cost_to_play == t.pd[p].chips_this_round:
-            return self.get_random_check_action(p, t)
+                '''
         else:
-            return self.get_random_call_action(p, t)
-            
-            
-    def eval_hole_cards_postflop_Kplyrs(self, p, t):
-        pass
-    # takes a player 'p' and table state 't', evaluates player's hole cards in terms of table state considering
-    # that other hole cards are unknown, num_opp is variable, stack relative to pot/bet size is variable,
-    # players previous actions this round and players left to act are variable
-    # most basically just returns value (1-100?) of two hole cards among possible two hole card hands
-    # could just hardcode rating of hand combinations, but their relative value sometimes changes drastically
-    # based on number of players
-    # for instance, pocket 2s has better than 50% win percentage against any unpaired set of overcards (nonpairs)
-    # with one player, but 2 players both with unpaired overcards drop win percentage of pocket2s in half
+            return None
+    # Takes a player and tablestate, returns int value to add to randomrange 'choice' 0-100
+    # just for 2plyr preflop
     def eval_hole_cards_PREFLOP_2plyrs(self, p, t):
         hole = t.pd[p].hand
         value = 0
-        left_act = t.left_to_act[:]
-        # Rank Value each card, AK preflop branch leads apx 50% any other hand,
-        # rank_sum average value == 15, sub avg, then incr by some constant
-        # range created is -11 to 13, rly range does not include pocket_pairs
-        rank_sum = hole[0][0] + hole[1][0] - 15
-        value += rank_sum
+        left_act = t.left_to_act[:] # for use later
+        print('left to act inside eval hole cards looks like ' + str(t.left_to_act[:]))
+        # range created is 15-81
+        rank_sum = (hole[0][0] + hole[1][0])*3
         # Pocket Pair Rank value
         p_pair_rank = 0
         if hole[0][0] == hole[1][0]:
             p_pair_rank += hole[0][0]
-        pass
+        if p_pair_rank:
+            value += (p_pair_rank*7) # this makes range of 14-98
+        else:
+            value += rank_sum
+        return value
 
     def eval_hole_cards_POSTFLOP_2plyrs(self, p, t):
-        pass
-    # this will be preflop, discriminate between if you are first or last to act
-    def eval_hole_cards_preflop_Kplyrs(self, p, t):
-        # when this is called will p be equal to t.left_to_act[0]?
         pass
 
     # input is the player 'p' and the table state 't'
@@ -186,20 +198,6 @@ class Expert_Bot(player.Player):
         ranks = [x[0] for x in hand]
         sd_sum = self.straight_draws_sum(hand+t.com_cards)
         choice += sd_sum
-        # made straight | made flush
-        
-        # num opponent
-        
-        # position
-        
-        # true cost compared to pot value
-        
-        # opp bet patterns, vpip versus passivity 
-        
-        # detect likely made hands, guess range
-        
-        # trap with nuts, detect top possible hands versus likely hands
-        
         # set BET AMOUNT
         if t.min_bet >= t.pd[p].stack: # not enough for min_bet, if bet amt is stack
             amount = t.pd[p].stack
@@ -282,7 +280,7 @@ class Expert_Bot(player.Player):
             choice += max(pairs)
         if choice <= 85:
             return ("fold",0)
-        elif choice <= 100:
+        elif choice <= 110:
             return ("call", 0)
         else:
             # if not enough for legal raise
