@@ -38,6 +38,7 @@ class Player():
 #********* BOT STUFF ******************************************************************************
 
     def get_random_bot_action(self, p, table):
+        print('got here')
         if table.pd[p].stack == 0:
             return ('check',0)
         # bot big blind special option actions

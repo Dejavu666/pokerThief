@@ -2,6 +2,7 @@ from random import randrange
 import player
 
 # really only preflop play from BB position is more defined
+# also need preflop play from non-BB position
 # work on post-flop play get_random_call|check_action()
 
 # avoid dangerous board states if not made hand, 4-to-straight, 4-to-flush
@@ -19,6 +20,8 @@ class Expert_Bot(player.Player):
 
     # PRIMARY Function Determines what other functions to be called
     def get_random_bot_action(self, p, t):
+        print('inside expert bot profile class, function get_random_bot_action')
+        # auto-check for all-in players
         if t.pd[p].stack == 0:
             return ('check',0)
         # BIG BLIND special options ONLY 2 PLAYER
@@ -31,13 +34,44 @@ class Expert_Bot(player.Player):
         # GET PREFLOP ACTION 2 PLAYERS
         if len(t.seat_order) == 2 and t.round == 1:
             if t.cost_to_play == t.pd[p].chips_this_round:
+                print('inside expert bot profile class, function get_random_bot_action line 37')
                 return self.get_2PLAYER_PREFLOP_check_action(p, t)
             else:
                 return self.get_2PLAYER_PREFLOP_call_action(p, t)
+        # GET POSTFLOP action 2 players
+        if len(t.seat_order) == 2 and t.round > 1 and t.cost_to_play == t.pd[p].chips_this_round:
+            return self.get_2PLAYER_POSTFLOP_check_action(p, t)
+        if len(t.seat_order) == 2 and t.round > 1 and t.cost_to_play > t.pd[p].chips_this_round:
+            return self.get_2PLAYER_POSTFLOP_call_action(p, t)
         if len(t.seat_order) > 2 and t.round == 1:# more than 2 PLAYER
             if t.cost_to_play == t.pd[p].chips_this_round:
                 return self.get_random_call_action(p, t)
             
+    def get_2PLAYER_PREFLOP_call_action(self, p, t):
+        print('inside get_2PLAYER_PREFLOP_call_action')
+        return ('fold', 0)
+        
+    def get_2PLAYER_PREFLOP_check_action(self, p, t):
+        print('inside get_2PLAYER_PREFLOP_check_action')
+        hand_score = self.eval_hole_cards_PREFLOP_2plyrs(p, t)
+        print('hand score is ' + str(hand_score))
+        rand_val = randrange(0, 100)
+        return ('check', 0)
+        # check with bad hands
+        
+        # bet with good hands
+        
+    def get_2PLAYER_POSTFLOP_call_action(self, p, t):
+        return ('fold', 0)
+        
+    def get_2PLAYER_POSTFLOP_check_action(self, p, t):
+        return ('check', 0)
+        
+    def get_KPLAYER_POSTFLOP_call_action(self, p, t):
+        return ('fold', 0)
+        
+    def get_KPLAYER_POSTFLOP_check_action(self, p, t):
+        return ('check', 0)
             
     def has_big_blind_option(self, p, t):
         if len(t.seat_order) == 2 and t.round == 1 and p == t.seat_order[1] and t.cost_to_play == t.pd[p].chips_this_round:
@@ -76,6 +110,9 @@ class Expert_Bot(player.Player):
             return None
     # Takes a player and tablestate, returns int value to add to randomrange 'choice' 0-100
     # just for 2plyr preflop
+        print('inside has_big_blind_option_Kplyrs')
+        pass
+        
     def eval_hole_cards_PREFLOP_2plyrs(self, p, t):
         hole = t.pd[p].hand
         value = 0
